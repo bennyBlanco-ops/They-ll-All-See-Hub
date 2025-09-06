@@ -1,0 +1,332 @@
+local Player = game:GetService("Players").LocalPlayer
+local char = Player.Character or Player.CharacterAdded:Wait()
+local UIS = game:GetService("UserInputService")
+local Runservice = game:GetService("RunService")
+
+local Shutdown = false
+
+local s = Instance.new("ScreenGui")
+s.Parent = Player.PlayerGui
+s.IgnoreGuiInset = true
+s.ResetOnSpawn = false
+s.Name = "TheyllAllSeeHub"
+local hubFrame = Instance.new("Frame")
+hubFrame.Parent = s
+hubFrame.Name = "TheyllAllSeeHubFrame"
+hubFrame.Size = UDim2.new(0,450,0,300)
+hubFrame.AnchorPoint = Vector2.new(0.5,0.5)
+hubFrame.Position = UDim2.new(0.5,0,0.5,0)
+hubFrame.Transparency = 0.5
+Instance.new("UICorner", hubFrame)
+local logo = Instance.new("TextLabel")
+logo.Parent = hubFrame
+logo.Name = "Logo"
+logo.Text = "TASB"
+logo.TextScaled = true
+logo.Size = UDim2.new(0,100,0,25)
+logo.BackgroundTransparency = 1
+logo.TextColor3 = Color3.new(1,1,1)
+Instance.new("UIStroke", logo)
+local OverHeadFrame = Instance.new("Frame")
+OverHeadFrame.Parent = hubFrame
+OverHeadFrame.Name = 'ButtonFrame'
+OverHeadFrame.AnchorPoint = Vector2.new(0,0.1)
+OverHeadFrame.BackgroundTransparency = 0.75
+OverHeadFrame.BorderSizePixel = 0
+OverHeadFrame.Position = UDim2.new(0,0,0.1,0)
+OverHeadFrame.Size = UDim2.new(1,0,0,25)
+local g = Instance.new("UIGridLayout")
+g.Parent = OverHeadFrame
+g.CellPadding = UDim2.new(0,5,0,5)
+g.CellSize = UDim2.new(0,105,0,20)
+g.HorizontalAlignment = Enum.HorizontalAlignment.Left
+g.VerticalAlignment = Enum.VerticalAlignment.Center
+g.SortOrder = Enum.SortOrder.LayoutOrder
+
+local PTab = Instance.new("TextButton") -- speed + speed slider
+PTab.Name = "PlayerTab"
+PTab.TextScaled = true
+PTab.Text = "Player"
+PTab.BackgroundTransparency = 0.5
+PTab.Parent = OverHeadFrame
+PTab.LayoutOrder = 1
+
+local ETab = Instance.new("TextButton") -- generators, tools, survivors, killers, + togglable keylining
+ETab.Name = "EspTab"
+ETab.TextScaled = true
+ETab.Text = "Esp"
+ETab.BackgroundTransparency = 0.5
+ETab.Parent = OverHeadFrame
+ETab.LayoutOrder = 2
+
+local KTab = Instance.new("TextButton") -- killer warnings (mass infection direction) + dodging
+KTab.Name = "KillerHaxTab"
+KTab.TextScaled = true
+KTab.Text = "Killer Exploits"
+KTab.BackgroundTransparency = 0.5
+KTab.Parent = OverHeadFrame
+KTab.LayoutOrder = 3
+
+local CloseTab = Instance.new("TextButton")
+CloseTab.Parent = hubFrame
+CloseTab.Text = "X"
+CloseTab.TextScaled = true
+CloseTab.TextColor3 = Color3.new(1,0,0)
+CloseTab.Size = UDim2.new(0,25,0,25)
+CloseTab.AnchorPoint = Vector2.new(1,0)
+CloseTab.Position = UDim2.new(1,0,0,0)
+CloseTab.Name = "Close"
+
+local CompletePlayerTab = Instance.new("Frame")
+CompletePlayerTab.Parent = hubFrame
+CompletePlayerTab.Name = "TabFrame"
+CompletePlayerTab.AnchorPoint = Vector2.new(0,0.4)
+CompletePlayerTab.Position = UDim2.new(0,0,0.5,0)
+CompletePlayerTab.Size = UDim2.new(1,0,0,225)
+CompletePlayerTab.BackgroundColor3 = Color3.new(0,0,0)
+CompletePlayerTab.BackgroundTransparency = 0.8
+
+local CurrentTab = nil
+
+local PlrTab = nil
+local EspTab = nil
+local KhaxTab = nil
+
+
+local isRunning = false
+local heartbeatConn = nil
+local runAnimId = "rbxassetid://136252471123500"
+local anim = Instance.new("Animation")
+anim.AnimationId = runAnimId
+local runTrack = char:WaitForChild("Humanoid"):LoadAnimation(anim)
+
+function CreatePlayerTab()
+	if CurrentTab then 
+		if CurrentTab.Name == "PlayerTab" then return
+		else
+			print(CurrentTab)
+			CurrentTab:Destroy() CurrentTab = nil
+		end 
+	end
+	local newframe = Instance.new("Frame")
+	newframe.Parent = CompletePlayerTab
+	newframe.Name = "PlayerTab"
+	newframe.AnchorPoint = Vector2.new(.5,.5)
+	newframe.Position = UDim2.new(0.5,0,0.5,0)
+	newframe.Size = UDim2.new(.95,0,0,210)
+	local Left = Instance.new("Frame")
+	Left.Parent = newframe
+	Left.Name = "LeftSide"
+	Left.Size = UDim2.new(0,300,1,0)
+
+	--buttons and toggles
+	local sprint = Instance.new("TextButton")
+	sprint.Name = "SprintButton"
+	sprint.Parent = Left
+	sprint.Position = UDim2.new(.05,0,.05,0)
+	sprint.Size = UDim2.new(0,180,0,50)
+	sprint.Text = "Sprint"
+	sprint.TextScaled = true
+	sprint.TextColor3 = Color3.new(1,0,0)
+	local stroke = Instance.new("UIStroke")
+	stroke.Parent = sprint
+	stroke.Thickness = 4
+
+	local slider = Instance.new("Frame")
+	slider.Name = "Slider"
+	slider.Parent = Left
+	slider.Position = UDim2.new(0.05,0,.4,0)
+	slider.Size = UDim2.new(0,270,0,20)
+	slider.BackgroundColor3 = Color3.fromRGB(112,112,112)
+	local slidebtn = Instance.new("TextButton")
+	slidebtn.Name = "SlideButton"
+	slidebtn.Parent = slider
+	slidebtn.AnchorPoint = Vector2.new(0,.5)
+	slidebtn.Position = UDim2.new(0,0,.5,0)
+	slidebtn.Size = UDim2.new(0,30,0,50)
+	slidebtn.Text = ""
+
+	local sprintspeed = 2.45
+
+	task.spawn(function() -- slider logic
+		local db = false
+		local step = 0.01
+		local percentage = 0
+
+		local function snap(number,factor)
+			if factor == 0 then
+				return number
+			else
+				return math.floor(number/factor+0.5)*factor
+
+			end
+		end
+
+		UIS.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				db = false
+			end
+		end)
+
+		slidebtn.MouseButton1Down:Connect(function()
+			db = true
+		end)
+
+		Runservice.RenderStepped:Connect(function()
+			if db then
+				local MousePos = UIS:GetMouseLocation().X
+				local BtnPos = slidebtn.Position
+				local FrameSize = slider.AbsoluteSize.X
+				local FramePos = slider.AbsolutePosition.X
+				local pos = snap((MousePos-FramePos)/FrameSize,step)
+				percentage = math.clamp(pos,0,1)
+				slidebtn.Position = UDim2.new(percentage,-12,BtnPos.Y.Scale,BtnPos.Y.Offset)
+			end
+		end)
+
+		slidebtn.Changed:Connect(function()
+			local scale = slidebtn.Position.X.Scale
+			local minVal = 2.45
+			local maxVal = 4.45
+			local value = minVal + (maxVal - minVal) * scale
+			local rounded = math.floor(value * 100) / 100 -- Round to 2 decimal places
+			slidebtn.Text = tostring(rounded)
+			sprintspeed = rounded
+		end)
+	end)
+
+	task.spawn(function() -- main run logic
+		local UIS = game:GetService("UserInputService")
+		local RunService = game:GetService("RunService")
+
+		-- Helper function to get sprinting NumberValue
+		local function getSprintingValue()
+			local playersFolder = workspace:FindFirstChild("Players")
+			if not playersFolder then return nil end
+
+			local targetModel = nil
+			for _, model in ipairs(playersFolder:GetDescendants()) do
+				if model:IsA("Model") and model:GetAttribute("Username") == "TheyWillBurnToo" then
+					targetModel = model
+					break
+				end
+			end
+
+			if not targetModel then return nil end
+
+			local speedMultipliers = targetModel:FindFirstChild("SpeedMultipliers")
+			if not speedMultipliers then return nil end
+
+			local sprinting = speedMultipliers:FindFirstChild("Sprinting")
+			if sprinting and sprinting:IsA("NumberValue") then
+				return sprinting
+			end
+
+			return nil
+		end
+
+
+		local sprintingValue = getSprintingValue()
+
+		local function stopHeartbeat()
+			if heartbeatConn then
+				heartbeatConn:Disconnect()
+				heartbeatConn = nil
+			end
+			if sprintingValue then
+				sprintingValue.Value = 1 -- reset sprint speed when stopping
+				runTrack:Stop()
+			end
+		end
+
+		local function startHeartbeat()
+			stopHeartbeat() -- safety first
+
+			sprintingValue = getSprintingValue()
+			if not sprintingValue then return end
+
+			heartbeatConn = RunService.Heartbeat:Connect(function()
+				if not isRunning or Shutdown == true then
+					stopHeartbeat()
+					return
+				end
+
+
+
+				-- Check if Left Shift is held
+				if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
+					sprintingValue.Value = sprintspeed
+					runTrack:Play()
+				else
+					sprintingValue.Value = 1
+					runTrack:Stop()
+				end
+			end)
+		end
+
+		sprint.MouseButton1Click:Connect(function()
+			isRunning = not isRunning
+			sprint.TextColor3 = isRunning and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+
+			if isRunning and Shutdown == false then
+				startHeartbeat()
+			else
+				stopHeartbeat()
+			end
+		end)
+	end)
+
+	PlrTab = newframe
+	CurrentTab = newframe
+end
+
+CreatePlayerTab()
+
+function CreateEspTab()
+	if CurrentTab then 
+		if CurrentTab.Name == "EspTab" then return
+		else
+			print(CurrentTab)
+			CurrentTab:Destroy() CurrentTab = nil
+		end 
+	end
+	local newframe = Instance.new("Frame")
+	newframe.Parent = CompletePlayerTab
+	newframe.Name = "EspTab"
+	newframe.AnchorPoint = Vector2.new(.5,.5)
+	newframe.Position = UDim2.new(0.5,0,0.5,0)
+	newframe.Size = UDim2.new(.95,0,0,210)
+	local Left = Instance.new("Frame")
+	Left.Parent = newframe
+	Left.Name = "LeftSide"
+	Left.Size = UDim2.new(0,300,1,0)
+
+	--buttons and toggles
+	local sprint = Instance.new("TextButton")
+	sprint.Name = "SprintButton"
+	sprint.Parent = Left
+	sprint.Position = UDim2.new(.05,0,.05,0)
+	sprint.Size = UDim2.new(0,180,0,50)
+	sprint.Text = "Sprint"
+	sprint.TextScaled = true
+	sprint.TextColor3 = Color3.new(1,0,0)
+	local stroke = Instance.new("UIStroke")
+	stroke.Parent = sprint
+	stroke.Thickness = 4
+
+
+	task.spawn(function() -- main esp button toggle logic
+
+	end)
+
+	PlrTab = newframe
+	CurrentTab = newframe
+end
+
+PTab.MouseButton1Click:Connect(CreatePlayerTab)
+ETab.MouseButton1Click:Connect(CreateEspTab)
+
+CloseTab.MouseButton1Click:Connect(function()
+	Shutdown = true
+	s:Destroy()
+end)
