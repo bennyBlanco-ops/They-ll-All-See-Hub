@@ -313,7 +313,7 @@ function CreatePlayerTab()
 			stopFovHeartbeat() -- safety first
 
 			FovHeartbeatConn = RunService.PreRender:Connect(function()
-				if not isFov or Shutdown == true or cancelPlayerTab == true then
+				if not isFov or Shutdown == true then
 					stopFovHeartbeat()
 					return
 				end
