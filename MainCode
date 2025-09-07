@@ -3,7 +3,7 @@ local char = Player.Character or Player.CharacterAdded:Wait()
 local UIS = game:GetService("UserInputService")
 local Runservice = game:GetService("RunService")
 
-local currentVersion = "2.3.2"
+local currentVersion = "2.4"
 
 local Shutdown = false
 
@@ -297,7 +297,7 @@ function CreatePlayerTab()
 			if not sprintingValue then return end
 
 			heartbeatConn = RunService.Heartbeat:Connect(function()
-				if not isRunning or Shutdown == true or cancelPlayerTab == true then
+				if not isRunning or Shutdown == true then
 					stopHeartbeat()
 					return
 				end
@@ -480,6 +480,12 @@ function CreateEspTab()
 			end
 
 			-- Monitor for future tools
+			workspace:WaitForChild("Map").DescendantAdded:Connect(function(descendant)
+				if descendant:IsA("Tool") and state then
+					applyHighlight(descendant, Color3.fromRGB(255, 165, 0), Color3.new(0.7, 0.7, 0))
+				end
+			end)
+			
 			if state then
 				cleanup.Items.conn = ingameFolder.DescendantRemoving:Connect(function(obj)
 					if obj:IsA("Tool") then
@@ -522,7 +528,12 @@ function CreateEspTab()
 						end
 					end
 				end
-
+				
+				workspace:WaitForChild("Map").DescendantAdded:Connect(function(descendant)
+					if descendant.Name == "Generator" and state then
+						applyHighlight(descendant, Color3.fromRGB(128, 0, 128), Color3.new(0.4, 0, 0.4))
+					end
+				end)
 				cleanup.Generators.conn = finalMapFolder.DescendantRemoving:Connect(function(obj)
 					if obj.Name == "Generator" then
 						removeHighlights(obj)
@@ -556,197 +567,221 @@ function CreateEspTab()
 
 			local name = nil
 			local model = nil
+			local isNoli = false
+			
+			local function VBoxes()
+				if name and model and state then
+					if name == "1x1x1x1" then
+						-- Replace 'model' with a reference to your character model
 
+						-- Make sure the model has a HumanoidRootPart
+						local hrp = model:FindFirstChild("HumanoidRootPart")
+						if not hrp then
+							return
+						end
+
+						-- Create the direction visualizer part
+						directionPart = Instance.new("Part")
+						directionPart.Name = "DirectionVisualizer"
+						directionPart.Size = Vector3.new(6, 4, 150) -- width, height, depth
+						directionPart.Anchored = false
+						directionPart.CanCollide = false
+						directionPart.BrickColor = BrickColor.Red()
+						directionPart.Material = Enum.Material.Neon
+						directionPart.Transparency = 0.9
+						directionPart.Parent = model
+						directionPart.Massless = true
+
+						-- Position it so that it starts at HRP and extends forward
+						-- We offset it 75 studs forward (half of 150)
+						directionPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -75)
+
+						-- Weld the part to the HRP
+						local weld = Instance.new("WeldConstraint")
+						weld.Part0 = hrp
+						weld.Part1 = directionPart
+						weld.Parent = directionPart
+
+						workspace:WaitForChild("Map").DescendantAdded:Connect(function(descendant)
+							if descendant.Name == "1x1x1x1Zombie" then
+								applyHighlight(descendant, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0))
+								local h = descendant:FindFirstChildOfClass("Humanoid")
+								if h then
+									h.Died:Connect(function()
+										removeHighlights(descendant)
+									end)
+								end
+
+								workspace:WaitForChild("Map").DescendantRemoving:Connect(function(descendantRemoved)
+									if descendantRemoved == descendant then
+										removeHighlights(descendant)
+									end
+								end)
+							end
+						end)
+
+					elseif name == "c00lkidd" then
+						-- Replace 'model' with a reference to your character model
+
+						-- Make sure the model has a HumanoidRootPart
+						local hrp = model:FindFirstChild("HumanoidRootPart")
+						if not hrp then
+							return
+						end
+
+						-- Create the direction visualizer part
+						directionPart = Instance.new("Part")
+						directionPart.Name = "DirectionVisualizer"
+						directionPart.Size = Vector3.new(6, 4, 100) -- width, height, depth
+						directionPart.Anchored = false
+						directionPart.CanCollide = false
+						directionPart.BrickColor = BrickColor.Red()
+						directionPart.Material = Enum.Material.Neon
+						directionPart.Transparency = 0.9
+						directionPart.Parent = model
+						directionPart.Massless = true
+
+						-- Position it so that it starts at HRP and extends forward
+						-- We offset it 75 studs forward (half of 150)
+						directionPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -50)
+
+						-- Weld the part to the HRP
+						local weld = Instance.new("WeldConstraint")
+						weld.Part0 = hrp
+						weld.Part1 = directionPart
+						weld.Parent = directionPart
+
+						workspace:WaitForChild("Map").DescendantAdded:Connect(function(descendant)
+							if descendant.Name == "PizzaDeliveryRig" then
+								applyHighlight(descendant, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0))
+								local h = descendant:FindFirstChildOfClass("Humanoid")
+								if h then
+									h.Died:Connect(function()
+										removeHighlights(descendant)
+									end)
+								end
+
+								workspace:WaitForChild("Map").DescendantRemoving:Connect(function(descendantRemoved)
+									if descendantRemoved == descendant then
+										removeHighlights(descendant)
+									end
+								end)
+							end
+						end)
+					elseif name == "JohnDoe" then
+
+						-- Make sure the model has a HumanoidRootPart
+						local hrp = model:FindFirstChild("HumanoidRootPart")
+						if not hrp then
+							return
+						end
+
+						-- Create the direction visualizer part
+						directionPart = Instance.new("Part")
+						directionPart.Name = "DirectionVisualizer"
+						directionPart.Size = Vector3.new(6, 4, 125) -- width, height, depth
+						directionPart.Anchored = false
+						directionPart.CanCollide = false
+						directionPart.BrickColor = BrickColor.Red()
+						directionPart.Material = Enum.Material.Neon
+						directionPart.Transparency = 0.25
+						directionPart.Parent = model
+						directionPart.Massless = true
+
+						-- Position it so that it starts at HRP and extends forward
+						-- We offset it 75 studs forward (half of 150)
+						directionPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -62.5)
+
+						-- Weld the part to the HRP
+						local weld = Instance.new("WeldConstraint")
+						weld.Part0 = hrp
+						weld.Part1 = directionPart
+						weld.Parent = directionPart
+					elseif name == "Noli" then
+						-- Make sure the model has a HumanoidRootPart
+						local hrp = model:FindFirstChild("HumanoidRootPart")
+						if not hrp then
+							return
+						end
+
+						-- Create the direction visualizer part
+						directionPart = Instance.new("Part")
+						directionPart.Name = "DirectionVisualizer"
+						directionPart.Size = Vector3.new(6, 4, 150) -- width, height, depth
+						directionPart.Anchored = false
+						directionPart.CanCollide = false
+						directionPart.BrickColor = BrickColor.Red()
+						directionPart.Material = Enum.Material.Neon
+						directionPart.Transparency = 0.9
+						directionPart.Parent = model
+						directionPart.Massless = true
+
+						-- Position it so that it starts at HRP and extends forward
+						-- We offset it 75 studs forward (half of 150)
+						directionPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -75)
+
+						-- Weld the part to the HRP
+						local weld = Instance.new("WeldConstraint")
+						weld.Part0 = hrp
+						weld.Part1 = directionPart
+						weld.Parent = directionPart
+
+						workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantAdded:Connect(function(descendant)
+							if descendant.Name == "Noli" and isNoli == true and Shutdown == false then
+								applyHighlight(descendant, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0))
+								local h = descendant:FindFirstChildOfClass("Humanoid")
+								if h then
+									h.Died:Connect(function()
+										removeHighlights(descendant)
+									end)
+								end
+
+								workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantRemoving:Connect(function(descendantRemoved)
+									if descendantRemoved == descendant and Shutdown == false then
+										removeHighlights(descendant)
+									end
+								end)
+							end
+						end)
+					elseif name == "Slasher" then
+
+					end
+				end
+			end
+			
 			for _, child in pairs(folder:GetChildren()) do
 				if state then
 					name = child.Name
 					model = child
 					applyHighlight(child, Color3.fromRGB(255, 0, 0), Color3.new(0.6, 0, 0))
+					if name == "Noli" then
+						isNoli = true
+					end
+					VBoxes()
 				else
 					removeHighlights(child)
 				end
 			end
 
-
-
-
-			if name and model and state then
-				if name == "1x1x1x1" then
-					-- Replace 'model' with a reference to your character model
-
-					-- Make sure the model has a HumanoidRootPart
-					local hrp = model:FindFirstChild("HumanoidRootPart")
-					if not hrp then
-						return
-					end
-
-					-- Create the direction visualizer part
-					directionPart = Instance.new("Part")
-					directionPart.Name = "DirectionVisualizer"
-					directionPart.Size = Vector3.new(6, 4, 150) -- width, height, depth
-					directionPart.Anchored = false
-					directionPart.CanCollide = false
-					directionPart.BrickColor = BrickColor.Red()
-					directionPart.Material = Enum.Material.Neon
-					directionPart.Transparency = 0.25
-					directionPart.Parent = model
-					directionPart.Massless = true
-
-					-- Position it so that it starts at HRP and extends forward
-					-- We offset it 75 studs forward (half of 150)
-					directionPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -75)
-
-					-- Weld the part to the HRP
-					local weld = Instance.new("WeldConstraint")
-					weld.Part0 = hrp
-					weld.Part1 = directionPart
-					weld.Parent = directionPart
-
-					workspace:WaitForChild("Map").DescendantAdded:Connect(function(descendant)
-						if descendant.Name == "1x1x1x1Zombie" then
-							applyHighlight(descendant, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0))
-							local h = descendant:FindFirstChildOfClass("Humanoid")
-							if h then
-								h.Died:Connect(function()
-									removeHighlights(descendant)
-								end)
-							end
-
-							workspace:WaitForChild("Map").DescendantRemoving:Connect(function(descendantRemoved)
-								if descendantRemoved == descendant then
-									removeHighlights(descendant)
-								end
-							end)
-						end
-					end)
-
-				elseif name == "c00lkidd" then
-					-- Replace 'model' with a reference to your character model
-
-					-- Make sure the model has a HumanoidRootPart
-					local hrp = model:FindFirstChild("HumanoidRootPart")
-					if not hrp then
-						return
-					end
-
-					-- Create the direction visualizer part
-					directionPart = Instance.new("Part")
-					directionPart.Name = "DirectionVisualizer"
-					directionPart.Size = Vector3.new(6, 4, 50) -- width, height, depth
-					directionPart.Anchored = false
-					directionPart.CanCollide = false
-					directionPart.BrickColor = BrickColor.Red()
-					directionPart.Material = Enum.Material.Neon
-					directionPart.Transparency = 0.25
-					directionPart.Parent = model
-					directionPart.Massless = true
-
-					-- Position it so that it starts at HRP and extends forward
-					-- We offset it 75 studs forward (half of 150)
-					directionPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -25)
-
-					-- Weld the part to the HRP
-					local weld = Instance.new("WeldConstraint")
-					weld.Part0 = hrp
-					weld.Part1 = directionPart
-					weld.Parent = directionPart
-
-					workspace:WaitForChild("Map").DescendantAdded:Connect(function(descendant)
-						if descendant.Name == "PizzaDeliveryRig" then
-							applyHighlight(descendant, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0))
-							local h = descendant:FindFirstChildOfClass("Humanoid")
-							if h then
-								h.Died:Connect(function()
-									removeHighlights(descendant)
-								end)
-							end
-
-							workspace:WaitForChild("Map").DescendantRemoving:Connect(function(descendantRemoved)
-								if descendantRemoved == descendant then
-									removeHighlights(descendant)
-								end
-							end)
-						end
-					end)
-				elseif name == "JohnDoe" then
-
-					-- Make sure the model has a HumanoidRootPart
-					local hrp = model:FindFirstChild("HumanoidRootPart")
-					if not hrp then
-						return
-					end
-
-					-- Create the direction visualizer part
-					directionPart = Instance.new("Part")
-					directionPart.Name = "DirectionVisualizer"
-					directionPart.Size = Vector3.new(6, 4, 75) -- width, height, depth
-					directionPart.Anchored = false
-					directionPart.CanCollide = false
-					directionPart.BrickColor = BrickColor.Red()
-					directionPart.Material = Enum.Material.Neon
-					directionPart.Transparency = 0.25
-					directionPart.Parent = model
-					directionPart.Massless = true
-
-					-- Position it so that it starts at HRP and extends forward
-					-- We offset it 75 studs forward (half of 150)
-					directionPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -37.5)
-
-					-- Weld the part to the HRP
-					local weld = Instance.new("WeldConstraint")
-					weld.Part0 = hrp
-					weld.Part1 = directionPart
-					weld.Parent = directionPart
-				elseif name == "Noli" then
-					-- Make sure the model has a HumanoidRootPart
-					local hrp = model:FindFirstChild("HumanoidRootPart")
-					if not hrp then
-						return
-					end
-
-					-- Create the direction visualizer part
-					directionPart = Instance.new("Part")
-					directionPart.Name = "DirectionVisualizer"
-					directionPart.Size = Vector3.new(6, 4, 40) -- width, height, depth
-					directionPart.Anchored = false
-					directionPart.CanCollide = false
-					directionPart.BrickColor = BrickColor.Red()
-					directionPart.Material = Enum.Material.Neon
-					directionPart.Transparency = 0.25
-					directionPart.Parent = model
-					directionPart.Massless = true
-
-					-- Position it so that it starts at HRP and extends forward
-					-- We offset it 75 studs forward (half of 150)
-					directionPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -20)
-
-					-- Weld the part to the HRP
-					local weld = Instance.new("WeldConstraint")
-					weld.Part0 = hrp
-					weld.Part1 = directionPart
-					weld.Parent = directionPart
-
-					workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantAdded:Connect(function(descendant)
-						if descendant.Name == "Noli" and Shutdown == false then
-							applyHighlight(descendant, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0))
-							local h = descendant:FindFirstChildOfClass("Humanoid")
-							if h then
-								h.Died:Connect(function()
-									removeHighlights(descendant)
-								end)
-							end
-
-							workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantRemoving:Connect(function(descendantRemoved)
-								if descendantRemoved == descendant and Shutdown == false then
-									removeHighlights(descendant)
-								end
-							end)
-						end
-					end)
-				elseif name == "Slasher" then
-
+			workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantAdded:Connect(function(descendant)
+				if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") and state then
+					applyHighlight(descendant, Color3.fromRGB(255, 0, 0), Color3.new(0.6, 0, 0))
+					name = descendant.Name
+					model = descendant
+					VBoxes()
 				end
-			end
+			end)
+
+			workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantRemoving:Connect(function(descendant)
+				if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") and state then
+					removeHighlights(descendant)
+					if descendant == model then
+						isNoli = false
+					end
+				end
+			end)
+
+			
 
 			if cleanup.Killers.conn then
 				cleanup.Killers.conn:Disconnect()
@@ -773,24 +808,38 @@ function CreateEspTab()
 		local function toggleSurvivors(state)
 			local folder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Survivors")
 			if not folder then return end
-
+				
+			local function ApplyDynamicHighlight(model)
+				if model.Name == "Elliot" then
+					applyHighlight(model, Color3.fromRGB(0, 255, 0), Color3.new(0, 0.4, 0))
+				elseif model.Name == "Shedletsky" then
+					applyHighlight(model, Color3.fromRGB(255, 255, 0), Color3.new(0.7, 0.7, 0))
+				else
+					applyHighlight(model, Color3.fromRGB(0, 0, 255), Color3.new(0, 0, 0.4))
+				end
+			end
+			
 			for _, child in pairs(folder:GetChildren()) do
 				if state then
-					if child.Name ~= "Elliot" then
-						applyHighlight(child, Color3.fromRGB(0, 0, 255), Color3.new(0, 0, 0.4))
-					elseif child.Name == "Elliot" then
-						applyHighlight(child, Color3.fromRGB(0, 255, 0), Color3.new(0, 0.4, 0))
-					else
-						applyHighlight(child, Color3.fromRGB(0, 0, 255), Color3.new(0, 0, 0.4))
-					end
+					ApplyDynamicHighlight(child)
 				else
 					removeHighlights(child)
 				end
 			end
+			
+			
+
 
 			if cleanup.Survivors.conn then
 				cleanup.Survivors.conn:Disconnect()
 			end
+
+
+			workspace:WaitForChild("Players"):WaitForChild("Survivors").DescendantAdded:Connect(function(descendant)
+				if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") and state then
+					ApplyDynamicHighlight(descendant)
+				end
+			end)
 
 			if state then
 				cleanup.Survivors.conn = folder.ChildRemoved:Connect(function(child)
