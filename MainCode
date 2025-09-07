@@ -89,8 +89,9 @@ CompletePlayerTab.BackgroundColor3 = Color3.new(0,0,0)
 CompletePlayerTab.BackgroundTransparency = 0.8
 
 
--- Saved Esp Tab
+-- Saved Tab Data
 
+local SavedSprintToggleValue = false
 
 local SavedSurvValue = false
 local SavedKillValue = false
@@ -267,6 +268,7 @@ function CreatePlayerTab()
 		local sprintingValue = getSprintingValue()
 
 		local function stopHeartbeat()
+			SavedSprintToggleValue = isRunning
 			if heartbeatConn then
 				heartbeatConn:Disconnect()
 				heartbeatConn = nil
@@ -323,10 +325,13 @@ function CreatePlayerTab()
 			end)
 		end
 		
+		isRunning = SavedSprintToggleValue
+		sprint.TextColor3 = isRunning and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+		
 		sprint.MouseButton1Click:Connect(function()
 			isRunning = not isRunning
 			sprint.TextColor3 = isRunning and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-
+			SavedSprintToggleValue = isRunning
 			if isRunning and Shutdown == false then
 				startHeartbeat()
 			else
@@ -711,7 +716,7 @@ function CreateEspTab()
 					weld.Parent = directionPart
 					
 					workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantAdded:Connect(function(descendant)
-						if descendant.Name == "Noli" then
+						if descendant.Name == "Noli" and Shutdown == false then
 							applyHighlight(descendant, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0))
 							local h = descendant:FindFirstChildOfClass("Humanoid")
 							if h then
@@ -721,7 +726,7 @@ function CreateEspTab()
 							end
 
 							workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantRemoving:Connect(function(descendantRemoved)
-								if descendantRemoved == descendant then
+								if descendantRemoved == descendant and Shutdown == false then
 									removeHighlights(descendant)
 								end
 							end)
@@ -816,9 +821,11 @@ function CreateEspTab()
 				directionPart:Destroy()
 			end
 
-			for i, Highlight in ipairs(CachedHighlights) do
-				if Highlight then
-					Highlight:Destroy()
+			if Shutdown == true then
+				for i, Highlight in ipairs(CachedHighlights) do
+					if Highlight then
+						Highlight:Destroy()
+					end
 				end
 			end
 		end
