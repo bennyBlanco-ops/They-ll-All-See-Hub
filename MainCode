@@ -3,7 +3,7 @@ local char = Player.Character or Player.CharacterAdded:Wait()
 local UIS = game:GetService("UserInputService")
 local Runservice = game:GetService("RunService")
 
-local currentVersion = "2.5.2"
+local currentVersion = "2.5.3"
 
 local Shutdown = false
 
@@ -860,11 +860,17 @@ function CreateEspTab()
 				end
 			end
 			
-			local Humanoid = model:FindFirstChildOfClass("Humanoid")
-			if Humanoid then
-				Humanoid.Died:Connect(function()
-					removeHighlights(model)
-				end)
+			if model then
+				local Humanoid = model:FindFirstChildOfClass("Humanoid")
+				if Humanoid then
+					Humanoid.Died:Connect(function()
+						removeHighlights(model)
+					end)
+				else
+					model.Removing:Connect(function()
+						removeHighlights(mmdel)
+					end)
+				end
 			end
 
 
