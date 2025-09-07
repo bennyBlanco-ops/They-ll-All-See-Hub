@@ -3,7 +3,7 @@ local char = Player.Character or Player.CharacterAdded:Wait()
 local UIS = game:GetService("UserInputService")
 local Runservice = game:GetService("RunService")
 
-local currentVersion = "2.5.3"
+local currentVersion = "2.5.4"
 
 local Shutdown = false
 
@@ -275,7 +275,7 @@ function CreatePlayerTab()
 					return sprinting
 				end
 			end)
-			
+
 			return nil
 		end
 
@@ -489,7 +489,7 @@ function CreateEspTab()
 					applyHighlight(descendant, Color3.fromRGB(255, 165, 0), Color3.new(0.7, 0.7, 0))
 				end
 			end)
-			
+
 			if state then
 				cleanup.Items.conn = ingameFolder.DescendantRemoving:Connect(function(obj)
 					if obj:IsA("Tool") then
@@ -532,7 +532,7 @@ function CreateEspTab()
 						end
 					end
 				end
-				
+
 				workspace:WaitForChild("Map").DescendantAdded:Connect(function(descendant)
 					if descendant.Name == "Generator" and state then
 						applyHighlight(descendant, Color3.fromRGB(128, 0, 128), Color3.new(0.4, 0, 0.4))
@@ -572,7 +572,7 @@ function CreateEspTab()
 			local name = nil
 			local model = nil
 			local isNoli = false
-			
+
 			local function VBoxes()
 				if name and model and state then
 					if name == "1x1x1x1" then
@@ -759,7 +759,7 @@ function CreateEspTab()
 					end
 				end
 			end
-			
+
 			for _, child in pairs(folder:GetChildren()) do
 				if state then
 					name = child.Name
@@ -808,7 +808,7 @@ function CreateEspTab()
 				end
 			end)
 
-			
+
 
 			if cleanup.Killers.conn then
 				cleanup.Killers.conn:Disconnect()
@@ -841,7 +841,7 @@ function CreateEspTab()
 		local function toggleSurvivors(state)
 			local folder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Survivors")
 			if not folder then return end
-				
+
 			local function ApplyDynamicHighlight(model)
 				if model.Name == "Elliot" then
 					applyHighlight(model, Color3.fromRGB(0, 255, 0), Color3.new(0, 0.4, 0))
@@ -850,8 +850,21 @@ function CreateEspTab()
 				else
 					applyHighlight(model, Color3.fromRGB(0, 0, 255), Color3.new(0, 0, 0.4))
 				end
+				
+				if model then
+					local Humanoid = model:FindFirstChildOfClass("Humanoid")
+					if Humanoid then
+						Humanoid.Died:Connect(function()
+							removeHighlights(model)
+						end)
+					else
+						model.Removing:Connect(function()
+							removeHighlights(model)
+						end)
+					end
+				end
 			end
-			
+
 			for _, child in pairs(folder:GetChildren()) do
 				if state then
 					ApplyDynamicHighlight(child)
@@ -860,18 +873,6 @@ function CreateEspTab()
 				end
 			end
 			
-			if model then
-				local Humanoid = model:FindFirstChildOfClass("Humanoid")
-				if Humanoid then
-					Humanoid.Died:Connect(function()
-						removeHighlights(model)
-					end)
-				else
-					model.Removing:Connect(function()
-						removeHighlights(mmdel)
-					end)
-				end
-			end
 
 
 			if cleanup.Survivors.conn then
