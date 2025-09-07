@@ -17,11 +17,13 @@ hubFrame.Size = UDim2.new(0,450,0,300)
 hubFrame.AnchorPoint = Vector2.new(0.5,0.5)
 hubFrame.Position = UDim2.new(0.5,0,0.5,0)
 hubFrame.Transparency = 0.5
+hubFrame.Active = true
+hubFrame.Draggable = true
 Instance.new("UICorner", hubFrame)
 local logo = Instance.new("TextLabel")
 logo.Parent = hubFrame
 logo.Name = "Logo"
-logo.Text = "TASB"
+logo.Text = "TASH"
 logo.TextScaled = true
 logo.Size = UDim2.new(0,100,0,25)
 logo.BackgroundTransparency = 1
@@ -59,7 +61,7 @@ ETab.BackgroundTransparency = 0.5
 ETab.Parent = OverHeadFrame
 ETab.LayoutOrder = 2
 
-local KTab = Instance.new("TextButton") -- killer warnings (mass infection direction) + dodging
+local KTab = Instance.new("TextButton") -- killer warnings (mass infection direction)
 KTab.Name = "KillerHaxTab"
 KTab.TextScaled = true
 KTab.Text = "Killer Exploits"
@@ -86,24 +88,44 @@ CompletePlayerTab.Size = UDim2.new(1,0,0,225)
 CompletePlayerTab.BackgroundColor3 = Color3.new(0,0,0)
 CompletePlayerTab.BackgroundTransparency = 0.8
 
+
+-- Saved Esp Tab
+
+
+local SavedSurvValue = false
+local SavedKillValue = false
+local SavedGenValue = false
+local SavedItemValue = false
+
+
 local CurrentTab = nil
 
 local PlrTab = nil
 local EspTab = nil
 local KhaxTab = nil
 
+local CharacterType = "S"
 
 local isRunning = false
+local isFov = false
 local heartbeatConn = nil
-local runAnimId = "rbxassetid://136252471123500"
-local anim = Instance.new("Animation")
-anim.AnimationId = runAnimId
-local runTrack = char:WaitForChild("Humanoid"):LoadAnimation(anim)
+local FovHeartbeatConn = nil
+--local runAnimId = "rbxassetid://136252471123500"
+--local anim = Instance.new("Animation")
+--anim.AnimationId = runAnimId
+--local runTrack = char:WaitForChild("Humanoid"):LoadAnimation(anim)
+
+local cancelPlayerTab = false
+local cancelEspTab = false
+local cancelKillerTab = false
 
 function CreatePlayerTab()
 	if CurrentTab then 
 		if CurrentTab.Name == "PlayerTab" then return
 		else
+			cancelEspTab = true
+			cancelPlayerTab = false
+			cancelKillerTab = true
 			print(CurrentTab)
 			CurrentTab:Destroy() CurrentTab = nil
 		end 
@@ -131,6 +153,12 @@ function CreatePlayerTab()
 	local stroke = Instance.new("UIStroke")
 	stroke.Parent = sprint
 	stroke.Thickness = 4
+	local fov = sprint:Clone()
+	fov.Name = "FovButton"
+	fov.Parent = Left
+	fov.Position = UDim2.new(.05,0,.7,0)
+	fov.Text = "Fov"
+	fov.TextColor3 = Color3.new(0,1,1)
 
 	local slider = Instance.new("Frame")
 	slider.Name = "Slider"
@@ -192,6 +220,11 @@ function CreatePlayerTab()
 			local rounded = math.floor(value * 100) / 100 -- Round to 2 decimal places
 			slidebtn.Text = tostring(rounded)
 			sprintspeed = rounded
+			if CharacterType == "S" then
+				sprintspeed = sprintspeed
+			elseif CharacterType == "K" then
+				sprintspeed = sprintspeed + 1
+			end
 		end)
 	end)
 
@@ -208,6 +241,11 @@ function CreatePlayerTab()
 			for _, model in ipairs(playersFolder:GetDescendants()) do
 				if model:IsA("Model") and model:GetAttribute("Username") == "TheyWillBurnToo" then
 					targetModel = model
+					if model.Parent.Name == "Survivors" then
+						CharacterType = "S"
+					elseif model.Parent.Name == "Killers" then
+						CharacterType = "K"
+					end
 					break
 				end
 			end
@@ -235,7 +273,7 @@ function CreatePlayerTab()
 			end
 			if sprintingValue then
 				sprintingValue.Value = 1 -- reset sprint speed when stopping
-				runTrack:Stop()
+				--runTrack:Stop()
 			end
 		end
 
@@ -246,7 +284,7 @@ function CreatePlayerTab()
 			if not sprintingValue then return end
 
 			heartbeatConn = RunService.Heartbeat:Connect(function()
-				if not isRunning or Shutdown == true then
+				if not isRunning or Shutdown == true or cancelPlayerTab == true then
 					stopHeartbeat()
 					return
 				end
@@ -256,14 +294,35 @@ function CreatePlayerTab()
 				-- Check if Left Shift is held
 				if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
 					sprintingValue.Value = sprintspeed
-					runTrack:Play()
+					--runTrack:Play()
 				else
 					sprintingValue.Value = 1
-					runTrack:Stop()
+					--runTrack:Stop()
 				end
 			end)
 		end
+		
+		local function stopFovHeartbeat()
+			if FovHeartbeatConn then
+				FovHeartbeatConn:Disconnect()
+				FovHeartbeatConn = nil
+			end
+		end
 
+		local function startFovHeartbeat()
+			stopFovHeartbeat() -- safety first
+
+			FovHeartbeatConn = RunService.PreRender:Connect(function()
+				if not isFov or Shutdown == true or cancelPlayerTab == true then
+					stopFovHeartbeat()
+					return
+				end
+				
+				workspace.CurrentCamera.FieldOfView = 120
+				game:GetService("TextChatService").ChatWindowConfiguration.Enabled = true
+			end)
+		end
+		
 		sprint.MouseButton1Click:Connect(function()
 			isRunning = not isRunning
 			sprint.TextColor3 = isRunning and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
@@ -274,10 +333,22 @@ function CreatePlayerTab()
 				stopHeartbeat()
 			end
 		end)
+		
+		fov.MouseButton1Click:Connect(function()
+			isFov = not isFov
+			fov.TextColor3 = isFov and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0,255,225)
+
+			if isFov and Shutdown == false then
+				startFovHeartbeat()
+			else
+				stopFovHeartbeat()
+			end
+		end)
 	end)
 
 	PlrTab = newframe
 	CurrentTab = newframe
+	print(CurrentTab)
 end
 
 CreatePlayerTab()
@@ -286,7 +357,9 @@ function CreateEspTab()
 	if CurrentTab then 
 		if CurrentTab.Name == "EspTab" then return
 		else
-			print(CurrentTab)
+			cancelEspTab = false
+			cancelPlayerTab = true
+			cancelKillerTab = true
 			CurrentTab:Destroy() CurrentTab = nil
 		end 
 	end
@@ -301,32 +374,519 @@ function CreateEspTab()
 	Left.Name = "LeftSide"
 	Left.Size = UDim2.new(0,300,1,0)
 
-	--buttons and toggles
-	local sprint = Instance.new("TextButton")
-	sprint.Name = "SprintButton"
-	sprint.Parent = Left
-	sprint.Position = UDim2.new(.05,0,.05,0)
-	sprint.Size = UDim2.new(0,180,0,50)
-	sprint.Text = "Sprint"
-	sprint.TextScaled = true
-	sprint.TextColor3 = Color3.new(1,0,0)
-	local stroke = Instance.new("UIStroke")
-	stroke.Parent = sprint
-	stroke.Thickness = 4
-
 
 	task.spawn(function() -- main esp button toggle logic
+		local function createButton(name, posY, color, parent, txtSize)
+			local btn = Instance.new("TextButton")
+			btn.Size = UDim2.new(0, 120, 0, 40)
+			btn.Position = UDim2.new(.05, 0, 0, posY)
+			btn.BackgroundColor3 = color
+			btn.TextColor3 = Color3.new(1, 1, 1)
+			btn.Text = name .. ": OFF"
+			btn.Font = Enum.Font.SourceSansBold
+			btn.TextSize = txtSize
+			btn.Parent = parent
+			return btn
+		end
+		
+		local CachedHighlights = {}
+		
+		local survivorButton = createButton("Survivors", 10, Color3.fromRGB(0, 0, 255), Left, 18)
+		local killerButton = createButton("Killers", 60, Color3.fromRGB(255, 0, 0), Left, 18)
+		local generatorButton = createButton("Generators", 110, Color3.fromRGB(128, 0, 128), Left, 18)
+		local itemButton = createButton("Items", 160, Color3.fromRGB(255, 165, 0), Left, 18)
+		
+		local function applyHighlight(obj, color, outcolor)
+			if not obj:FindFirstChild("Highlight") then
+				local hl = Instance.new("Highlight")
+				hl.FillColor = color
+				hl.OutlineColor = outcolor
+				hl.OutlineTransparency = 0
+				hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+				hl.Name = "Highlight"
+				hl.Parent = obj
+				table.insert(CachedHighlights, hl)
+			end
+		end
 
+		local function removeHighlights(obj)
+			local hl = obj:FindFirstChild("Highlight")
+			if hl then
+				hl:Destroy()
+			end
+		end
+		
+		local toggles = {
+			Survivors = false,
+			Killers = false,
+			Speed = false,
+			Generators = false,
+			Items = false,
+		}
+
+		local cleanup = {
+			Survivors = {},
+			Killers = {},
+			Generators = {conn = nil, heartbeat = nil},
+			Items = {conn = nil},
+		}
+		
+		-- Load saved ESP settings, if any
+
+		toggles.Survivors = SavedSurvValue
+		toggles.Killers = SavedKillValue
+		toggles.Generators = SavedGenValue
+		toggles.Items = SavedItemValue
+		
+		survivorButton.Text = "Survivors: " .. (toggles.Survivors and "ON" or "OFF")
+		killerButton.Text = "Killers: " .. (toggles.Killers and "ON" or "OFF")
+		generatorButton.Text = "Generators: " .. (toggles.Generators and "ON" or "OFF")
+		itemButton.Text = "Items: " .. (toggles.Items and "ON" or "OFF")
+		
+		local function toggleItems(state)
+			local ingameFolder = workspace:FindFirstChild("Map")
+			if not ingameFolder then return end
+			ingameFolder = ingameFolder:FindFirstChild("Ingame")
+			if not ingameFolder then return end
+
+			if cleanup.Items.conn then
+				cleanup.Items.conn:Disconnect()
+				cleanup.Items.conn = nil
+			end
+
+			-- Initial tool scan
+			for _, obj in ipairs(ingameFolder:GetDescendants()) do
+				if obj:IsA("Tool") then
+					if state then
+						applyHighlight(obj, Color3.fromRGB(255, 165, 0), Color3.new(0.7, 0.7, 0)) -- Orange for items
+					else
+						removeHighlights(obj)
+					end
+				end
+			end
+
+			-- Monitor for future tools
+			if state then
+				cleanup.Items.conn = ingameFolder.DescendantRemoving:Connect(function(obj)
+					if obj:IsA("Tool") then
+						removeHighlights(obj)
+					end
+				end)
+			else
+				-- Remove highlights when toggled off
+				for _, obj in ipairs(ingameFolder:GetDescendants()) do
+					if obj:IsA("Tool") then
+						removeHighlights(obj)
+					end
+				end
+			end
+		end
+		
+		local function toggleGenerators(state)
+			local mapFolder = workspace:FindFirstChild("Map")
+			if not mapFolder then return end
+			local ingameFolder = mapFolder:FindFirstChild("Ingame")
+			if not ingameFolder then return end
+			local finalMapFolder = ingameFolder:FindFirstChild("Map")
+			if not finalMapFolder then return end
+
+			if cleanup.Generators.conn then
+				cleanup.Generators.conn:Disconnect()
+				cleanup.Generators.conn = nil
+			end
+			if cleanup.Generators.heartbeat then
+				cleanup.Generators.heartbeat:Disconnect()
+				cleanup.Generators.heartbeat = nil
+			end
+
+			if state then
+				for _, obj in ipairs(finalMapFolder:GetDescendants()) do
+					if obj.Name == "Generator" and obj:IsA("Model") then
+						local progress = obj:FindFirstChild("Progress")
+						if progress and progress:IsA("NumberValue") and progress.Value < 100 then
+							applyHighlight(obj, Color3.fromRGB(128, 0, 128), Color3.new(0.4, 0, 0.4))
+						end
+					end
+				end
+
+				cleanup.Generators.conn = finalMapFolder.DescendantRemoving:Connect(function(obj)
+					if obj.Name == "Generator" then
+						removeHighlights(obj)
+					end
+				end)
+
+				cleanup.Generators.heartbeat = Runservice.Heartbeat:Connect(function()
+					for _, obj in ipairs(finalMapFolder:GetDescendants()) do
+						if obj.Name == "Generator" and obj:IsA("Model") then
+							local progress = obj:FindFirstChild("Progress")
+							if progress and progress:IsA("NumberValue") and progress.Value >= 100 then
+								removeHighlights(obj)
+							end
+						end
+					end
+				end)
+			else
+				for _, obj in ipairs(finalMapFolder:GetDescendants()) do
+					if obj.Name == "Generator" then
+						removeHighlights(obj)
+					end
+				end
+			end
+		end
+		
+		local directionPart = nil
+		
+		local function toggleKillers(state)
+			local folder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Killers")
+			if not folder then return end
+			
+			local name = nil
+			local model = nil
+			
+			for _, child in pairs(folder:GetChildren()) do
+				if state then
+					name = child.Name
+					model = child
+					applyHighlight(child, Color3.fromRGB(255, 0, 0), Color3.new(0.6, 0, 0))
+				else
+					removeHighlights(child)
+				end
+			end
+			
+			
+			
+			
+			if name and model and state then
+				if name == "1x1x1x1" then
+					-- Replace 'model' with a reference to your character model
+
+					-- Make sure the model has a HumanoidRootPart
+					local hrp = model:FindFirstChild("HumanoidRootPart")
+					if not hrp then
+						return
+					end
+
+					-- Create the direction visualizer part
+					directionPart = Instance.new("Part")
+					directionPart.Name = "DirectionVisualizer"
+					directionPart.Size = Vector3.new(6, 4, 150) -- width, height, depth
+					directionPart.Anchored = false
+					directionPart.CanCollide = false
+					directionPart.BrickColor = BrickColor.Red()
+					directionPart.Material = Enum.Material.Neon
+					directionPart.Transparency = 0.25
+					directionPart.Parent = model
+					directionPart.Massless = true
+
+					-- Position it so that it starts at HRP and extends forward
+					-- We offset it 75 studs forward (half of 150)
+					directionPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -75)
+
+					-- Weld the part to the HRP
+					local weld = Instance.new("WeldConstraint")
+					weld.Part0 = hrp
+					weld.Part1 = directionPart
+					weld.Parent = directionPart
+
+					workspace:WaitForChild("Map").DescendantAdded:Connect(function(descendant)
+						if descendant.Name == "1x1x1x1Zombie" then
+							applyHighlight(descendant, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0))
+							local h = descendant:FindFirstChildOfClass("Humanoid")
+							if h then
+								h.Died:Connect(function()
+									removeHighlights(descendant)
+								end)
+							end
+							
+							workspace:WaitForChild("Map").DescendantRemoving:Connect(function(descendantRemoved)
+								if descendantRemoved == descendant then
+									removeHighlights(descendant)
+								end
+							end)
+						end
+					end)
+					
+				elseif name == "c00lkidd" then
+					-- Replace 'model' with a reference to your character model
+
+					-- Make sure the model has a HumanoidRootPart
+					local hrp = model:FindFirstChild("HumanoidRootPart")
+					if not hrp then
+						return
+					end
+
+					-- Create the direction visualizer part
+					directionPart = Instance.new("Part")
+					directionPart.Name = "DirectionVisualizer"
+					directionPart.Size = Vector3.new(6, 4, 50) -- width, height, depth
+					directionPart.Anchored = false
+					directionPart.CanCollide = false
+					directionPart.BrickColor = BrickColor.Red()
+					directionPart.Material = Enum.Material.Neon
+					directionPart.Transparency = 0.25
+					directionPart.Parent = model
+					directionPart.Massless = true
+
+					-- Position it so that it starts at HRP and extends forward
+					-- We offset it 75 studs forward (half of 150)
+					directionPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -25)
+
+					-- Weld the part to the HRP
+					local weld = Instance.new("WeldConstraint")
+					weld.Part0 = hrp
+					weld.Part1 = directionPart
+					weld.Parent = directionPart
+					
+					workspace:WaitForChild("Map").DescendantAdded:Connect(function(descendant)
+						if descendant.Name == "PizzaDeliveryRig" then
+							applyHighlight(descendant, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0))
+							local h = descendant:FindFirstChildOfClass("Humanoid")
+							if h then
+								h.Died:Connect(function()
+									removeHighlights(descendant)
+								end)
+							end
+
+							workspace:WaitForChild("Map").DescendantRemoving:Connect(function(descendantRemoved)
+								if descendantRemoved == descendant then
+									removeHighlights(descendant)
+								end
+							end)
+						end
+					end)
+				elseif name == "JohnDoe" then
+
+					-- Make sure the model has a HumanoidRootPart
+					local hrp = model:FindFirstChild("HumanoidRootPart")
+					if not hrp then
+						return
+					end
+
+					-- Create the direction visualizer part
+					directionPart = Instance.new("Part")
+					directionPart.Name = "DirectionVisualizer"
+					directionPart.Size = Vector3.new(6, 4, 50) -- width, height, depth
+					directionPart.Anchored = false
+					directionPart.CanCollide = false
+					directionPart.BrickColor = BrickColor.Red()
+					directionPart.Material = Enum.Material.Neon
+					directionPart.Transparency = 0.25
+					directionPart.Parent = model
+					directionPart.Massless = true
+
+					-- Position it so that it starts at HRP and extends forward
+					-- We offset it 75 studs forward (half of 150)
+					directionPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -25)
+
+					-- Weld the part to the HRP
+					local weld = Instance.new("WeldConstraint")
+					weld.Part0 = hrp
+					weld.Part1 = directionPart
+					weld.Parent = directionPart
+				elseif name == "Noli" then
+					workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantAdded:Connect(function(descendant)
+						if descendant.Name == "Noli" then
+							applyHighlight(descendant, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0))
+							local h = descendant:FindFirstChildOfClass("Humanoid")
+							if h then
+								h.Died:Connect(function()
+									removeHighlights(descendant)
+								end)
+							end
+
+							workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantRemoving:Connect(function(descendantRemoved)
+								if descendantRemoved == descendant then
+									removeHighlights(descendant)
+								end
+							end)
+						end
+					end)
+				elseif name == "Slasher" then
+					
+				end
+			end
+			
+			if cleanup.Killers.conn then
+				cleanup.Killers.conn:Disconnect()
+				if directionPart then
+					directionPart:Destroy()
+				end
+			end
+
+			if state then
+				cleanup.Killers.conn = folder.ChildRemoved:Connect(function(child)
+					removeHighlights(child)
+					if directionPart then
+						directionPart:Destroy()
+					end
+				end)
+			else
+				cleanup.Killers.conn = nil
+				if directionPart then
+					directionPart:Destroy()
+				end
+			end
+		end
+		
+		local function toggleSurvivors(state)
+			local folder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Survivors")
+			if not folder then return end
+
+			for _, child in pairs(folder:GetChildren()) do
+				if state then
+					if child.Name ~= "Elliot" then
+						applyHighlight(child, Color3.fromRGB(0, 0, 255), Color3.new(0, 0, 0.4))
+					elseif child.Name == "Elliot" then
+						applyHighlight(child, Color3.fromRGB(0, 255, 0), Color3.new(0, 0.4, 0))
+					else
+						applyHighlight(child, Color3.fromRGB(0, 0, 255), Color3.new(0, 0, 0.4))
+					end
+				else
+					removeHighlights(child)
+				end
+			end
+
+			if cleanup.Survivors.conn then
+				cleanup.Survivors.conn:Disconnect()
+			end
+
+			if state then
+				cleanup.Survivors.conn = folder.ChildRemoved:Connect(function(child)
+					removeHighlights(child)
+				end)
+			else
+				cleanup.Survivors.conn = nil
+			end
+		end
+		
+		local function deleteAllEsp()
+			
+			-- Disconnect survivor connection
+			if cleanup.Survivors.conn then
+				cleanup.Survivors.conn:Disconnect()
+				cleanup.Survivors.conn = nil
+			end
+
+			-- Disconnect killer connection
+			if cleanup.Killers.conn then
+				cleanup.Killers.conn:Disconnect()
+				cleanup.Killers.conn = nil
+			end
+
+			-- Disconnect generator connections
+			if cleanup.Generators.conn then
+				cleanup.Generators.conn:Disconnect()
+				cleanup.Generators.conn = nil
+			end
+
+			-- Disconnect generator heartbeat connections
+			if cleanup.Generators.heartbeat then
+				cleanup.Generators.heartbeat:Disconnect()
+				cleanup.Generators.heartbeat = nil
+			end
+			
+
+			if directionPart then
+				directionPart:Destroy()
+			end
+
+			for i, Highlight in ipairs(CachedHighlights) do
+				if Highlight then
+					Highlight:Destroy()
+				end
+			end
+		end
+		
+		-- Button click logic
+		survivorButton.MouseButton1Click:Connect(function()
+			toggles.Survivors = not toggles.Survivors
+			survivorButton.Text = "Survivors: " .. (toggles.Survivors and "ON" or "OFF")
+			toggleSurvivors(toggles.Survivors)
+		end)
+
+		killerButton.MouseButton1Click:Connect(function()
+			toggles.Killers = not toggles.Killers
+			killerButton.Text = "Killers: " .. (toggles.Killers and "ON" or "OFF")
+			toggleKillers(toggles.Killers)
+		end)
+
+		generatorButton.MouseButton1Click:Connect(function()
+			toggles.Generators = not toggles.Generators
+			generatorButton.Text = "Generators: " .. (toggles.Generators and "ON" or "OFF")
+			toggleGenerators(toggles.Generators)
+		end)
+
+		itemButton.MouseButton1Click:Connect(function()
+			toggles.Items = not toggles.Items
+			itemButton.Text = "Items: " .. (toggles.Items and "ON" or "OFF")
+			toggleItems(toggles.Items)
+		end)
+		
+		local cancelLoop
+		cancelLoop = Runservice.Heartbeat:Connect(function()
+			if Shutdown == true or cancelEspTab == true then
+				deleteAllEsp()
+				cancelLoop:Disconnect()
+				SavedSurvValue = toggles.Survivors
+				SavedKillValue = toggles.Killers
+				SavedGenValue = toggles.Generators
+				SavedItemValue = toggles.Items
+			end
+		end)
 	end)
 
 	PlrTab = newframe
 	CurrentTab = newframe
+	print(CurrentTab)
+end
+
+function CreateKillerHacksTab() -- fix buttons not appearing
+	if CurrentTab then 
+		if CurrentTab.Name == "KillerHacksTab" then return
+		else
+			cancelEspTab = true
+			cancelPlayerTab = true
+			cancelKillerTab = false
+			CurrentTab:Destroy() CurrentTab = nil
+		end 
+	end
+	local newframe = Instance.new("Frame")
+	newframe.Parent = CompletePlayerTab
+	newframe.Name = "KillerHacksTab"
+	newframe.AnchorPoint = Vector2.new(.5,.5)
+	newframe.Position = UDim2.new(0.5,0,0.5,0)
+	newframe.Size = UDim2.new(.95,0,0,210)
+	local Left = Instance.new("Frame")
+	Left.Parent = newframe
+	Left.Name = "LeftSide"
+	Left.Size = UDim2.new(0,300,1,0)
+
+	task.spawn(function()
+		
+	end)
+
+	PlrTab = newframe
+	CurrentTab = newframe
+	print(CurrentTab)
 end
 
 PTab.MouseButton1Click:Connect(CreatePlayerTab)
 ETab.MouseButton1Click:Connect(CreateEspTab)
+KTab.MouseButton1Click:Connect(CreateKillerHacksTab)
 
 CloseTab.MouseButton1Click:Connect(function()
 	Shutdown = true
+	task.wait()
 	s:Destroy()
+end)
+
+local shown = true
+
+-- toggle visibility
+UIS.InputBegan:Connect(function(input, proc)
+	if proc then return end
+	if input.KeyCode == Enum.KeyCode.Minus then
+		shown = not shown
+		hubFrame.Visible = shown
+	end
 end)
