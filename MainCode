@@ -3,7 +3,7 @@ local char = Player.Character or Player.CharacterAdded:Wait()
 local UIS = game:GetService("UserInputService")
 local Runservice = game:GetService("RunService")
 
-local currentVersion = "2.3.1"
+local currentVersion = "2.3.2"
 
 local Shutdown = false
 
@@ -828,7 +828,7 @@ function CreateEspTab()
 			end
 
 
-			if directionPart then
+			if directionPart and Shutdown == true then
 				directionPart:Destroy()
 			end
 
