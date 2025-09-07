@@ -3,7 +3,7 @@ local char = Player.Character or Player.CharacterAdded:Wait()
 local UIS = game:GetService("UserInputService")
 local Runservice = game:GetService("RunService")
 
-local currentVersion = "2.5.4"
+local currentVersion = "2.5.5"
 
 local Shutdown = false
 
@@ -257,6 +257,8 @@ function CreatePlayerTab()
 						CharacterType = "S"
 					elseif model.Parent.Name == "Killers" then
 						CharacterType = "K"
+					else
+						CharacterType = "S"
 					end
 					break
 				end
@@ -266,15 +268,14 @@ function CreatePlayerTab()
 
 			local speedMultipliers = targetModel:FindFirstChild("SpeedMultipliers")
 			if not speedMultipliers then return nil end
+			
+			local sprinting = speedMultipliers:FindFirstChild("Sprinting")
+			if sprinting and sprinting:IsA("NumberValue") then
+				return sprinting
+			end
 
-			local getconn
-			getconn = RunService.RenderStepped:Connect(function()
-				local sprinting = speedMultipliers:FindFirstChild("Sprinting")
-				if sprinting and sprinting:IsA("NumberValue") then
-					getconn:Disconnect()
-					return sprinting
-				end
-			end)
+			repeat task.wait() until sprint ~= nil
+			
 
 			return nil
 		end
@@ -283,7 +284,6 @@ function CreatePlayerTab()
 		local sprintingValue = getSprintingValue()
 
 		local function stopHeartbeat()
-			SavedSprintToggleValue = isRunning
 			if heartbeatConn then
 				heartbeatConn:Disconnect()
 				heartbeatConn = nil
@@ -850,7 +850,7 @@ function CreateEspTab()
 				else
 					applyHighlight(model, Color3.fromRGB(0, 0, 255), Color3.new(0, 0, 0.4))
 				end
-				
+
 				if model then
 					local Humanoid = model:FindFirstChildOfClass("Humanoid")
 					if Humanoid then
@@ -872,7 +872,7 @@ function CreateEspTab()
 					removeHighlights(child)
 				end
 			end
-			
+
 
 
 			if cleanup.Survivors.conn then
@@ -971,7 +971,7 @@ function CreateEspTab()
 
 		local cancelLoop
 		cancelLoop = Runservice.Heartbeat:Connect(function()
-			if Shutdown == true or cancelEspTab == true then
+			if Shutdown == true then
 				deleteAllEsp()
 				cancelLoop:Disconnect()
 				SavedSurvValue = toggles.Survivors
