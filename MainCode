@@ -3,6 +3,8 @@ local char = Player.Character or Player.CharacterAdded:Wait()
 local UIS = game:GetService("UserInputService")
 local Runservice = game:GetService("RunService")
 
+local currentVersion = "2.3.1"
+
 local Shutdown = false
 
 local s = Instance.new("ScreenGui")
@@ -28,6 +30,15 @@ logo.TextScaled = true
 logo.Size = UDim2.new(0,100,0,25)
 logo.BackgroundTransparency = 1
 logo.TextColor3 = Color3.new(1,1,1)
+local ver = Instance.new("TextLabel")
+ver.Parent = hubFrame
+ver.Name = "ver"
+ver.Text = "v" .. currentVersion
+ver.TextScaled = true
+ver.Size = UDim2.new(0,50,0,25)
+ver.Position = UDim2.new(0.18,0,0,0)
+ver.BackgroundTransparency = 1
+ver.TextColor3 = Color3.new(0,0,0)
 Instance.new("UIStroke", logo)
 local OverHeadFrame = Instance.new("Frame")
 OverHeadFrame.Parent = hubFrame
@@ -303,7 +314,7 @@ function CreatePlayerTab()
 				end
 			end)
 		end
-		
+
 		local function stopFovHeartbeat()
 			if FovHeartbeatConn then
 				FovHeartbeatConn:Disconnect()
@@ -319,15 +330,15 @@ function CreatePlayerTab()
 					stopFovHeartbeat()
 					return
 				end
-				
+
 				workspace.CurrentCamera.FieldOfView = 120
 				game:GetService("TextChatService").ChatWindowConfiguration.Enabled = true
 			end)
 		end
-		
+
 		isRunning = SavedSprintToggleValue
 		sprint.TextColor3 = isRunning and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-		
+
 		sprint.MouseButton1Click:Connect(function()
 			isRunning = not isRunning
 			sprint.TextColor3 = isRunning and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
@@ -338,7 +349,7 @@ function CreatePlayerTab()
 				stopHeartbeat()
 			end
 		end)
-		
+
 		fov.MouseButton1Click:Connect(function()
 			isFov = not isFov
 			fov.TextColor3 = isFov and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0,255,225)
@@ -391,14 +402,14 @@ function CreateEspTab()
 			btn.Parent = parent
 			return btn
 		end
-		
+
 		local CachedHighlights = {}
-		
+
 		local survivorButton = createButton("Survivors", 10, Color3.fromRGB(0, 0, 255), Left, 18)
 		local killerButton = createButton("Killers", 60, Color3.fromRGB(255, 0, 0), Left, 18)
 		local generatorButton = createButton("Generators", 110, Color3.fromRGB(128, 0, 128), Left, 18)
 		local itemButton = createButton("Items", 160, Color3.fromRGB(255, 165, 0), Left, 18)
-		
+
 		local function applyHighlight(obj, color, outcolor)
 			if not obj:FindFirstChild("Highlight") then
 				local hl = Instance.new("Highlight")
@@ -418,7 +429,7 @@ function CreateEspTab()
 				hl:Destroy()
 			end
 		end
-		
+
 		local toggles = {
 			Survivors = false,
 			Killers = false,
@@ -433,19 +444,19 @@ function CreateEspTab()
 			Generators = {conn = nil, heartbeat = nil},
 			Items = {conn = nil},
 		}
-		
+
 		-- Load saved ESP settings, if any
 
 		toggles.Survivors = SavedSurvValue
 		toggles.Killers = SavedKillValue
 		toggles.Generators = SavedGenValue
 		toggles.Items = SavedItemValue
-		
+
 		survivorButton.Text = "Survivors: " .. (toggles.Survivors and "ON" or "OFF")
 		killerButton.Text = "Killers: " .. (toggles.Killers and "ON" or "OFF")
 		generatorButton.Text = "Generators: " .. (toggles.Generators and "ON" or "OFF")
 		itemButton.Text = "Items: " .. (toggles.Items and "ON" or "OFF")
-		
+
 		local function toggleItems(state)
 			local ingameFolder = workspace:FindFirstChild("Map")
 			if not ingameFolder then return end
@@ -484,7 +495,7 @@ function CreateEspTab()
 				end
 			end
 		end
-		
+
 		local function toggleGenerators(state)
 			local mapFolder = workspace:FindFirstChild("Map")
 			if not mapFolder then return end
@@ -536,16 +547,16 @@ function CreateEspTab()
 				end
 			end
 		end
-		
+
 		local directionPart = nil
-		
+
 		local function toggleKillers(state)
 			local folder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Killers")
 			if not folder then return end
-			
+
 			local name = nil
 			local model = nil
-			
+
 			for _, child in pairs(folder:GetChildren()) do
 				if state then
 					name = child.Name
@@ -555,10 +566,10 @@ function CreateEspTab()
 					removeHighlights(child)
 				end
 			end
-			
-			
-			
-			
+
+
+
+
 			if name and model and state then
 				if name == "1x1x1x1" then
 					-- Replace 'model' with a reference to your character model
@@ -600,7 +611,7 @@ function CreateEspTab()
 									removeHighlights(descendant)
 								end)
 							end
-							
+
 							workspace:WaitForChild("Map").DescendantRemoving:Connect(function(descendantRemoved)
 								if descendantRemoved == descendant then
 									removeHighlights(descendant)
@@ -608,7 +619,7 @@ function CreateEspTab()
 							end)
 						end
 					end)
-					
+
 				elseif name == "c00lkidd" then
 					-- Replace 'model' with a reference to your character model
 
@@ -639,7 +650,7 @@ function CreateEspTab()
 					weld.Part0 = hrp
 					weld.Part1 = directionPart
 					weld.Parent = directionPart
-					
+
 					workspace:WaitForChild("Map").DescendantAdded:Connect(function(descendant)
 						if descendant.Name == "PizzaDeliveryRig" then
 							applyHighlight(descendant, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0))
@@ -714,7 +725,7 @@ function CreateEspTab()
 					weld.Part0 = hrp
 					weld.Part1 = directionPart
 					weld.Parent = directionPart
-					
+
 					workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantAdded:Connect(function(descendant)
 						if descendant.Name == "Noli" and Shutdown == false then
 							applyHighlight(descendant, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0))
@@ -733,10 +744,10 @@ function CreateEspTab()
 						end
 					end)
 				elseif name == "Slasher" then
-					
+
 				end
 			end
-			
+
 			if cleanup.Killers.conn then
 				cleanup.Killers.conn:Disconnect()
 				if directionPart then
@@ -758,7 +769,7 @@ function CreateEspTab()
 				end
 			end
 		end
-		
+
 		local function toggleSurvivors(state)
 			local folder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Survivors")
 			if not folder then return end
@@ -789,9 +800,9 @@ function CreateEspTab()
 				cleanup.Survivors.conn = nil
 			end
 		end
-		
+
 		local function deleteAllEsp()
-			
+
 			-- Disconnect survivor connection
 			if cleanup.Survivors.conn then
 				cleanup.Survivors.conn:Disconnect()
@@ -815,7 +826,7 @@ function CreateEspTab()
 				cleanup.Generators.heartbeat:Disconnect()
 				cleanup.Generators.heartbeat = nil
 			end
-			
+
 
 			if directionPart then
 				directionPart:Destroy()
@@ -829,7 +840,7 @@ function CreateEspTab()
 				end
 			end
 		end
-		
+
 		-- Button click logic
 		survivorButton.MouseButton1Click:Connect(function()
 			toggles.Survivors = not toggles.Survivors
@@ -854,7 +865,7 @@ function CreateEspTab()
 			itemButton.Text = "Items: " .. (toggles.Items and "ON" or "OFF")
 			toggleItems(toggles.Items)
 		end)
-		
+
 		local cancelLoop
 		cancelLoop = Runservice.Heartbeat:Connect(function()
 			if Shutdown == true or cancelEspTab == true then
@@ -895,7 +906,7 @@ function CreateKillerHacksTab() -- fix buttons not appearing
 	Left.Size = UDim2.new(0,300,1,0)
 
 	task.spawn(function()
-		
+
 	end)
 
 	PlrTab = newframe
