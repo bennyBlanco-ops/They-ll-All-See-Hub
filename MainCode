@@ -3,7 +3,7 @@ local char = Player.Character or Player.CharacterAdded:Wait()
 local UIS = game:GetService("UserInputService")
 local Runservice = game:GetService("RunService")
 
-local currentVersion = "2.5.5"
+local currentVersion = "2.5.6"
 
 local Shutdown = false
 
@@ -268,14 +268,14 @@ function CreatePlayerTab()
 
 			local speedMultipliers = targetModel:FindFirstChild("SpeedMultipliers")
 			if not speedMultipliers then return nil end
-			
+
 			local sprinting = speedMultipliers:FindFirstChild("Sprinting")
 			if sprinting and sprinting:IsA("NumberValue") then
 				return sprinting
 			end
 
 			repeat task.wait() until sprint ~= nil
-			
+
 
 			return nil
 		end
@@ -485,7 +485,7 @@ function CreateEspTab()
 
 			-- Monitor for future tools
 			workspace:WaitForChild("Map").DescendantAdded:Connect(function(descendant)
-				if descendant:IsA("Tool") and state then
+				if descendant:IsA("Tool") and state and toggles.Items == true then
 					applyHighlight(descendant, Color3.fromRGB(255, 165, 0), Color3.new(0.7, 0.7, 0))
 				end
 			end)
@@ -534,7 +534,7 @@ function CreateEspTab()
 				end
 
 				workspace:WaitForChild("Map").DescendantAdded:Connect(function(descendant)
-					if descendant.Name == "Generator" and state then
+					if descendant.Name == "Generator" and state and toggles.Generators == true then
 						applyHighlight(descendant, Color3.fromRGB(128, 0, 128), Color3.new(0.4, 0, 0.4))
 					end
 				end)
@@ -593,7 +593,7 @@ function CreateEspTab()
 						directionPart.BrickColor = BrickColor.Red()
 						directionPart.Material = Enum.Material.Neon
 						directionPart.Transparency = 0.9
-						directionPart.Parent = model
+						directionPart.Parent = workspace
 						directionPart.Massless = true
 
 						-- Position it so that it starts at HRP and extends forward
@@ -643,7 +643,7 @@ function CreateEspTab()
 						directionPart.BrickColor = BrickColor.Red()
 						directionPart.Material = Enum.Material.Neon
 						directionPart.Transparency = 0.9
-						directionPart.Parent = model
+						directionPart.Parent = workspace
 						directionPart.Massless = true
 
 						-- Position it so that it starts at HRP and extends forward
@@ -691,7 +691,7 @@ function CreateEspTab()
 						directionPart.BrickColor = BrickColor.Red()
 						directionPart.Material = Enum.Material.Neon
 						directionPart.Transparency = 0.25
-						directionPart.Parent = model
+						directionPart.Parent = workspace
 						directionPart.Massless = true
 
 						-- Position it so that it starts at HRP and extends forward
@@ -720,7 +720,7 @@ function CreateEspTab()
 						directionPart.BrickColor = BrickColor.Red()
 						directionPart.Material = Enum.Material.Neon
 						directionPart.Transparency = 0.9
-						directionPart.Parent = model
+						directionPart.Parent = workspace
 						directionPart.Massless = true
 
 						-- Position it so that it starts at HRP and extends forward
@@ -776,7 +776,7 @@ function CreateEspTab()
 			end
 
 			workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantAdded:Connect(function(descendant)
-				if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") and state then
+				if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") and state and toggles.Killers == true then
 					applyHighlight(descendant, Color3.fromRGB(255, 0, 0), Color3.new(0.6, 0, 0))
 					if descendant.Name == "Noli" then
 						if isNoli == true then
@@ -858,7 +858,7 @@ function CreateEspTab()
 							removeHighlights(model)
 						end)
 					else
-						model.Removing:Connect(function()
+						model.Destroying:Connect(function()
 							removeHighlights(model)
 						end)
 					end
@@ -881,7 +881,7 @@ function CreateEspTab()
 
 
 			workspace:WaitForChild("Players"):WaitForChild("Survivors").DescendantAdded:Connect(function(descendant)
-				if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") and state then
+				if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") and state and toggles.Survivors == true then
 					ApplyDynamicHighlight(descendant)
 					local h = descendant:FindFirstChildOfClass("Humanoid")
 					if h then
@@ -980,8 +980,15 @@ function CreateEspTab()
 				SavedItemValue = toggles.Items
 			end
 		end)
+		
+		newframe.Destroying:Connect(function()
+			SavedSurvValue = toggles.Survivors
+			SavedKillValue = toggles.Killers
+			SavedGenValue = toggles.Generators
+			SavedItemValue = toggles.Items
+		end)
 	end)
-
+	
 	PlrTab = newframe
 	CurrentTab = newframe
 	print(CurrentTab)
