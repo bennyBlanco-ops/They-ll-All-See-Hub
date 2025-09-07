@@ -3,7 +3,7 @@ local char = Player.Character or Player.CharacterAdded:Wait()
 local UIS = game:GetService("UserInputService")
 local Runservice = game:GetService("RunService")
 
-local currentVersion = "2.4"
+local currentVersion = "2.5"
 
 local Shutdown = false
 
@@ -235,7 +235,7 @@ function CreatePlayerTab()
 			if CharacterType == "S" then
 				sprintspeed = sprintspeed
 			elseif CharacterType == "K" then
-				sprintspeed = sprintspeed + 1
+				sprintspeed = sprintspeed + 0.5
 			end
 		end)
 	end)
@@ -267,11 +267,15 @@ function CreatePlayerTab()
 			local speedMultipliers = targetModel:FindFirstChild("SpeedMultipliers")
 			if not speedMultipliers then return nil end
 
-			local sprinting = speedMultipliers:FindFirstChild("Sprinting")
-			if sprinting and sprinting:IsA("NumberValue") then
-				return sprinting
-			end
-
+			local getconn
+			getconn = RunService.RenderStepped:Connect(function()
+				local sprinting = speedMultipliers:FindFirstChild("Sprinting")
+				if sprinting and sprinting:IsA("NumberValue") then
+					getconn:Disconnect()
+					return sprinting
+				end
+			end)
+			
 			return nil
 		end
 
@@ -559,7 +563,7 @@ function CreateEspTab()
 			end
 		end
 
-		local directionPart = nil
+		local directionPartTable = {}
 
 		local function toggleKillers(state)
 			local folder = workspace:FindFirstChild("Players") and workspace.Players:FindFirstChild("Killers")
@@ -581,7 +585,7 @@ function CreateEspTab()
 						end
 
 						-- Create the direction visualizer part
-						directionPart = Instance.new("Part")
+						local directionPart = Instance.new("Part")
 						directionPart.Name = "DirectionVisualizer"
 						directionPart.Size = Vector3.new(6, 4, 150) -- width, height, depth
 						directionPart.Anchored = false
@@ -601,6 +605,7 @@ function CreateEspTab()
 						weld.Part0 = hrp
 						weld.Part1 = directionPart
 						weld.Parent = directionPart
+						table.insert(directionPartTable, directionPart)
 
 						workspace:WaitForChild("Map").DescendantAdded:Connect(function(descendant)
 							if descendant.Name == "1x1x1x1Zombie" then
@@ -630,7 +635,7 @@ function CreateEspTab()
 						end
 
 						-- Create the direction visualizer part
-						directionPart = Instance.new("Part")
+						local directionPart = Instance.new("Part")
 						directionPart.Name = "DirectionVisualizer"
 						directionPart.Size = Vector3.new(6, 4, 100) -- width, height, depth
 						directionPart.Anchored = false
@@ -650,6 +655,7 @@ function CreateEspTab()
 						weld.Part0 = hrp
 						weld.Part1 = directionPart
 						weld.Parent = directionPart
+						table.insert(directionPartTable, directionPart)
 
 						workspace:WaitForChild("Map").DescendantAdded:Connect(function(descendant)
 							if descendant.Name == "PizzaDeliveryRig" then
@@ -677,7 +683,7 @@ function CreateEspTab()
 						end
 
 						-- Create the direction visualizer part
-						directionPart = Instance.new("Part")
+						local directionPart = Instance.new("Part")
 						directionPart.Name = "DirectionVisualizer"
 						directionPart.Size = Vector3.new(6, 4, 125) -- width, height, depth
 						directionPart.Anchored = false
@@ -697,6 +703,7 @@ function CreateEspTab()
 						weld.Part0 = hrp
 						weld.Part1 = directionPart
 						weld.Parent = directionPart
+						table.insert(directionPartTable, directionPart)
 					elseif name == "Noli" then
 						-- Make sure the model has a HumanoidRootPart
 						local hrp = model:FindFirstChild("HumanoidRootPart")
@@ -705,7 +712,7 @@ function CreateEspTab()
 						end
 
 						-- Create the direction visualizer part
-						directionPart = Instance.new("Part")
+						local directionPart = Instance.new("Part")
 						directionPart.Name = "DirectionVisualizer"
 						directionPart.Size = Vector3.new(6, 4, 150) -- width, height, depth
 						directionPart.Anchored = false
@@ -725,24 +732,28 @@ function CreateEspTab()
 						weld.Part0 = hrp
 						weld.Part1 = directionPart
 						weld.Parent = directionPart
+						table.insert(directionPartTable, directionPart)
 
-						workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantAdded:Connect(function(descendant)
-							if descendant.Name == "Noli" and isNoli == true and Shutdown == false then
-								applyHighlight(descendant, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0))
-								local h = descendant:FindFirstChildOfClass("Humanoid")
+						for i, PossibleFakeNoli in ipairs(workspace:WaitForChild("Players"):WaitForChild("Killers"):GetChildren()) do
+							if PossibleFakeNoli.Name == "Noli" and PossibleFakeNoli:GetAttribute("FakestNoli") == true and model == PossibleFakeNoli and isNoli == true and Shutdown == false then
+								applyHighlight(PossibleFakeNoli, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0.6))
+								if directionPart then
+									directionPart:Destroy()
+								end
+								local h = PossibleFakeNoli:FindFirstChildOfClass("Humanoid")
 								if h then
 									h.Died:Connect(function()
-										removeHighlights(descendant)
+										removeHighlights(PossibleFakeNoli)
 									end)
 								end
 
 								workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantRemoving:Connect(function(descendantRemoved)
-									if descendantRemoved == descendant and Shutdown == false then
-										removeHighlights(descendant)
+									if descendantRemoved == PossibleFakeNoli and Shutdown == false then
+										removeHighlights(PossibleFakeNoli)
 									end
 								end)
 							end
-						end)
+						end
 					elseif name == "Slasher" then
 
 					end
@@ -754,6 +765,7 @@ function CreateEspTab()
 					name = child.Name
 					model = child
 					applyHighlight(child, Color3.fromRGB(255, 0, 0), Color3.new(0.6, 0, 0))
+					isNoli = false
 					if name == "Noli" then
 						isNoli = true
 					end
@@ -766,6 +778,14 @@ function CreateEspTab()
 			workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantAdded:Connect(function(descendant)
 				if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") and state then
 					applyHighlight(descendant, Color3.fromRGB(255, 0, 0), Color3.new(0.6, 0, 0))
+					if descendant.Name == "Noli" then
+						if isNoli == true then
+							removeHighlights(descendant)
+							descendant:SetAttribute("FakestNoli", true)
+						else
+							isNoli = true
+						end
+					end
 					name = descendant.Name
 					model = descendant
 					VBoxes()
@@ -773,9 +793,16 @@ function CreateEspTab()
 			end)
 
 			workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantRemoving:Connect(function(descendant)
-				if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") and state then
+				if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") then
 					removeHighlights(descendant)
-					if descendant == model then
+					for i, part in ipairs(directionPartTable) do
+						if part then
+							part:Destroy()
+						end
+					end
+					if descendant:GetAttribute("FakestNoli") == true then
+						descendant:SetAttribute("FakestNoli", nil)
+					else
 						isNoli = false
 					end
 				end
@@ -785,22 +812,28 @@ function CreateEspTab()
 
 			if cleanup.Killers.conn then
 				cleanup.Killers.conn:Disconnect()
-				if directionPart then
-					directionPart:Destroy()
+				for i, part in ipairs(directionPartTable) do
+					if part then
+						part:Destroy()
+					end
 				end
 			end
 
 			if state then
 				cleanup.Killers.conn = folder.ChildRemoved:Connect(function(child)
 					removeHighlights(child)
-					if directionPart then
-						directionPart:Destroy()
+					for i, part in ipairs(directionPartTable) do
+						if part then
+							part:Destroy()
+						end
 					end
 				end)
 			else
 				cleanup.Killers.conn = nil
-				if directionPart then
-					directionPart:Destroy()
+				for i, part in ipairs(directionPartTable) do
+					if part then
+						part:Destroy()
+					end
 				end
 			end
 		end
@@ -838,6 +871,12 @@ function CreateEspTab()
 			workspace:WaitForChild("Players"):WaitForChild("Survivors").DescendantAdded:Connect(function(descendant)
 				if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") and state then
 					ApplyDynamicHighlight(descendant)
+					local h = descendant:FindFirstChildOfClass("Humanoid")
+					if h then
+						h.Died:Connect(function()
+							removeHighlights(descendant)
+						end)
+					end
 				end
 			end)
 
@@ -877,8 +916,11 @@ function CreateEspTab()
 			end
 
 
-			if directionPart and Shutdown == true then
-				directionPart:Destroy()
+
+			for i, part in ipairs(directionPartTable) do
+				if part and Shutdown == true then
+					part:Destroy()
+				end
 			end
 
 			if Shutdown == true then
