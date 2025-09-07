@@ -340,8 +340,6 @@ function CreatePlayerTab()
 
 			if isFov and Shutdown == false then
 				startFovHeartbeat()
-			else
-				stopFovHeartbeat()
 			end
 		end)
 	end)
@@ -665,7 +663,7 @@ function CreateEspTab()
 					-- Create the direction visualizer part
 					directionPart = Instance.new("Part")
 					directionPart.Name = "DirectionVisualizer"
-					directionPart.Size = Vector3.new(6, 4, 50) -- width, height, depth
+					directionPart.Size = Vector3.new(6, 4, 75) -- width, height, depth
 					directionPart.Anchored = false
 					directionPart.CanCollide = false
 					directionPart.BrickColor = BrickColor.Red()
@@ -676,7 +674,7 @@ function CreateEspTab()
 
 					-- Position it so that it starts at HRP and extends forward
 					-- We offset it 75 studs forward (half of 150)
-					directionPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -25)
+					directionPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -37.5)
 
 					-- Weld the part to the HRP
 					local weld = Instance.new("WeldConstraint")
@@ -684,6 +682,34 @@ function CreateEspTab()
 					weld.Part1 = directionPart
 					weld.Parent = directionPart
 				elseif name == "Noli" then
+					-- Make sure the model has a HumanoidRootPart
+					local hrp = model:FindFirstChild("HumanoidRootPart")
+					if not hrp then
+						return
+					end
+
+					-- Create the direction visualizer part
+					directionPart = Instance.new("Part")
+					directionPart.Name = "DirectionVisualizer"
+					directionPart.Size = Vector3.new(6, 4, 40) -- width, height, depth
+					directionPart.Anchored = false
+					directionPart.CanCollide = false
+					directionPart.BrickColor = BrickColor.Red()
+					directionPart.Material = Enum.Material.Neon
+					directionPart.Transparency = 0.25
+					directionPart.Parent = model
+					directionPart.Massless = true
+
+					-- Position it so that it starts at HRP and extends forward
+					-- We offset it 75 studs forward (half of 150)
+					directionPart.CFrame = hrp.CFrame * CFrame.new(0, 0, -20)
+
+					-- Weld the part to the HRP
+					local weld = Instance.new("WeldConstraint")
+					weld.Part0 = hrp
+					weld.Part1 = directionPart
+					weld.Parent = directionPart
+					
 					workspace:WaitForChild("Players"):WaitForChild("Killers").DescendantAdded:Connect(function(descendant)
 						if descendant.Name == "Noli" then
 							applyHighlight(descendant, Color3.fromRGB(255, 0, 255), Color3.new(0.6, 0, 0))
