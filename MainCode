@@ -3,7 +3,7 @@ local char = Player.Character or Player.CharacterAdded:Wait()
 local UIS = game:GetService("UserInputService")
 local Runservice = game:GetService("RunService")
 
-local currentVersion = "2.6.3"
+local currentVersion = "2.6.4"
 
 local Shutdown = false
 
@@ -1176,8 +1176,6 @@ button.MouseButton1Click:Connect(function()
 	end
 end)
 
-	end)
-end
 
 -- Toggle logic
 button.MouseButton1Click:Connect(function()
