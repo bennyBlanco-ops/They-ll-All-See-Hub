@@ -3,7 +3,7 @@ local char = Player.Character or Player.CharacterAdded:Wait()
 local UIS = game:GetService("UserInputService")
 local Runservice = game:GetService("RunService")
 
-local currentVersion = "2.6"
+local currentVersion = "2.6.1"
 
 local Shutdown = false
 
@@ -1014,13 +1014,24 @@ function CreateKillerHacksTab() -- fix buttons not appearing
 	Left.Parent = newframe
 	Left.Name = "LeftSide"
 	Left.Size = UDim2.new(0,300,1,0)
+	local sprint = Instance.new("TextButton")
+	sprint.Name = "AnimButton"
+	sprint.Parent = Left
+	sprint.Position = UDim2.new(.05,0,.05,0)
+	sprint.Size = UDim2.new(0,180,0,50)
+	sprint.Text = "Copy Animations"
+	sprint.TextScaled = true
+	sprint.TextColor3 = Color3.new(1,0,0)
+	local stroke = Instance.new("UIStroke")
+	stroke.Parent = sprint
+	stroke.Thickness = 4
 
 	task.spawn(function()
 		local Players = game:GetService("Players")
 		local RunService = game:GetService("RunService")
 
 		local localPlayer = Players.LocalPlayer
-		local button = script.Parent:WaitForChild("ToggleButton")
+		local button = sprint
 		
 		local targetPlayer = nil
 		
