@@ -3,7 +3,7 @@ local char = Player.Character or Player.CharacterAdded:Wait()
 local UIS = game:GetService("UserInputService")
 local Runservice = game:GetService("RunService")
 
-local currentVersion = "2.6.1"
+local currentVersion = "2.6.2"
 
 local Shutdown = false
 
@@ -1028,140 +1028,163 @@ function CreateKillerHacksTab() -- fix buttons not appearing
 
 	task.spawn(function()
 		local Players = game:GetService("Players")
-		local RunService = game:GetService("RunService")
+local RunService = game:GetService("RunService")
 
-		local localPlayer = Players.LocalPlayer
-		local button = sprint
-		
-		local targetPlayer = nil
-		
-		-- Replace this with the target player's name or dynamically find one
-		for i, v in workspace.Players.Killers:GetChildren() do
-			if v:IsA("Model") and v:FindFirstChildOfClass("Humanoid") then
-				targetPlayer = v
-			end
+local localPlayer = Players.LocalPlayer
+local button = sprint
+
+local targetPlayer = nil
+
+-- Replace this with the target player's name or dynamically find one
+for _, v in workspace.Players.Killers:GetChildren() do
+	if v:IsA("Model") and v:FindFirstChildOfClass("Humanoid") then
+		targetPlayer = v
+	end
+end
+
+-- Animation state
+local isToggled = false
+local currentTrack = nil
+local lastAnimationId = nil
+local heartbeatConnection = nil
+
+-- Warn if target is missing
+if not targetPlayer then
+	warn("Target player not found")
+	return
+end
+
+local function getPlayingTrack(humanoid)
+	if not humanoid then return nil end
+	for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+		if track.IsPlaying and track.Animation then
+			return track
 		end
-		
+	end
+	return nil
+end
 
-		-- Animation state
-		local isToggled = false
-		local currentTrack = nil
-		local lastAnimationId = nil
-		local heartbeatConnection = nil
+local function stopCurrentTrack()
+	if currentTrack then
+		if currentTrack.IsPlaying then
+			currentTrack:Stop()
+		end
+		currentTrack:Destroy()
+		currentTrack = nil
+	end
+end
 
-		-- Warn if target is missing
-		if not targetPlayer then
-			warn("Target player not found")
+local function copyAnimation(animationId, humanoid)
+	if not humanoid then
+		warn("Local Humanoid is nil.")
+		return
+	end
+
+	-- If it's the same animation, skip reloading and just sync properties
+	if animationId == lastAnimationId and currentTrack then
+		return
+	end
+
+	stopCurrentTrack()
+
+	-- Create and play the new animation
+	local newAnim = Instance.new("Animation")
+	newAnim.AnimationId = animationId
+
+	local success, result = pcall(function()
+		currentTrack = humanoid:LoadAnimation(newAnim)
+	end)
+
+	if success and currentTrack then
+		currentTrack:Play()
+		lastAnimationId = animationId
+	else
+		warn("Failed to load animation: ", result)
+	end
+end
+
+local function syncAnimationState(targetTrack)
+	if not currentTrack or not targetTrack then return end
+
+	-- Sync TimePosition (animation progress)
+	if math.abs(currentTrack.TimePosition - targetTrack.TimePosition) > 0.05 then
+		currentTrack.TimePosition = targetTrack.TimePosition
+	end
+
+	-- Sync speed
+	if currentTrack.Speed ~= targetTrack.Speed then
+		currentTrack:AdjustSpeed(targetTrack.Speed)
+	end
+
+	-- Sync weight (blending)
+	if currentTrack.Weight ~= targetTrack.Weight then
+		currentTrack:AdjustWeight(targetTrack.Weight, 0.1)
+	end
+end
+
+local function startSync()
+	heartbeatConnection = RunService.Heartbeat:Connect(function()
+		local targetChar = targetPlayer
+		local localChar = localPlayer.Character
+
+		if not targetChar then
+			warn("Target character not found.")
 			return
 		end
 
-		local function getPlayingTrack(humanoid)
-			if not humanoid then return nil end
-			for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
-				if track.IsPlaying then
-					return track
-				end
-			end
-			return nil
+		if not localChar then
+			warn("Local character not found.")
+			return
 		end
 
-		local function stopCurrentTrack()
-			if currentTrack and currentTrack.IsPlaying then
-				currentTrack:Stop()
-				currentTrack:Destroy()
-				currentTrack = nil
-			end
+		local targetHumanoid = targetChar:FindFirstChildWhichIsA("Humanoid")
+		local localHumanoid = localChar:FindFirstChildWhichIsA("Humanoid")
+
+		if not targetHumanoid then
+			warn("Target humanoid not found.")
+			return
 		end
 
-		local function copyAnimation(animationId, humanoid)
-			if not humanoid then
-				warn("Local Humanoid is nil.")
-				return
-			end
+		if not localHumanoid then
+			warn("Local humanoid not found.")
+			return
+		end
 
-			if animationId == lastAnimationId then
-				return -- No change
-			end
+		local targetTrack = getPlayingTrack(targetHumanoid)
 
-			stopCurrentTrack()
-
-			-- Create and play the new animation
-			local newAnim = Instance.new("Animation")
-			newAnim.AnimationId = animationId
-
-			local success, result = pcall(function()
-				currentTrack = humanoid:LoadAnimation(newAnim)
-			end)
-
-			if success and currentTrack then
-				currentTrack:Play()
-				lastAnimationId = animationId
+		if targetTrack then
+			local animId = targetTrack.Animation and targetTrack.Animation.AnimationId
+			if animId then
+				copyAnimation(animId, localHumanoid)
+				syncAnimationState(targetTrack)
 			else
-				warn("Failed to load animation: ", result)
+				warn("Target animation ID not found.")
 			end
 		end
+	end)
+end
 
-		local function startSync()
-			heartbeatConnection = RunService.Heartbeat:Connect(function()
-				local targetChar = targetPlayer
-				local localChar = localPlayer.Character
+local function stopSync()
+	if heartbeatConnection then
+		heartbeatConnection:Disconnect()
+		heartbeatConnection = nil
+	end
+	stopCurrentTrack()
+	lastAnimationId = nil
+end
 
-				if not targetChar then
-					warn("Target character not found.")
-					return
-				end
+-- Toggle logic
+button.MouseButton1Click:Connect(function()
+	isToggled = not isToggled
+	if isToggled then
+		print("Animation sync enabled.")
+		startSync()
+	else
+		print("Animation sync disabled.")
+		stopSync()
+	end
+end)
 
-				if not localChar then
-					warn("Local character not found.")
-					return
-				end
-
-				local targetHumanoid = targetChar:FindFirstChildWhichIsA("Humanoid")
-				local localHumanoid = localChar:FindFirstChildWhichIsA("Humanoid")
-
-				if not targetHumanoid then
-					warn("Target humanoid not found.")
-					return
-				end
-
-				if not localHumanoid then
-					warn("Local humanoid not found.")
-					return
-				end
-
-				local targetTrack = getPlayingTrack(targetHumanoid)
-
-				if targetTrack then
-					local animId = targetTrack.Animation and targetTrack.Animation.AnimationId
-					if animId then
-						copyAnimation(animId, localHumanoid)
-					else
-						warn("Target animation ID not found.")
-					end
-				end
-			end)
-		end
-
-		local function stopSync()
-			if heartbeatConnection then
-				heartbeatConnection:Disconnect()
-				heartbeatConnection = nil
-			end
-			stopCurrentTrack()
-			lastAnimationId = nil
-		end
-
-		-- Toggle logic
-		button.MouseButton1Click:Connect(function()
-			isToggled = not isToggled
-			if isToggled then
-				print("Animation sync enabled.")
-				startSync()
-			else
-				print("Animation sync disabled.")
-				stopSync()
-			end
-		end)
 	end)
 
 	PlrTab = newframe
