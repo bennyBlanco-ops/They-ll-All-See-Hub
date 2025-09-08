@@ -3,7 +3,7 @@ local char = Player.Character or Player.CharacterAdded:Wait()
 local UIS = game:GetService("UserInputService")
 local Runservice = game:GetService("RunService")
 
-local currentVersion = "2.6.2"
+local currentVersion = "2.6.3"
 
 local Shutdown = false
 
@@ -1031,24 +1031,25 @@ function CreateKillerHacksTab() -- fix buttons not appearing
 local RunService = game:GetService("RunService")
 
 local localPlayer = Players.LocalPlayer
-local button = sprint
+local button = sprint -- Your button reference
 
 local targetPlayer = nil
 
--- Replace this with the target player's name or dynamically find one
+-- Find the target NPC or player
 for _, v in workspace.Players.Killers:GetChildren() do
 	if v:IsA("Model") and v:FindFirstChildOfClass("Humanoid") then
 		targetPlayer = v
+		break
 	end
 end
 
--- Animation state
+-- State
 local isToggled = false
 local currentTrack = nil
 local lastAnimationId = nil
 local heartbeatConnection = nil
 
--- Warn if target is missing
+-- Check if target exists
 if not targetPlayer then
 	warn("Target player not found")
 	return
@@ -1080,14 +1081,12 @@ local function copyAnimation(animationId, humanoid)
 		return
 	end
 
-	-- If it's the same animation, skip reloading and just sync properties
 	if animationId == lastAnimationId and currentTrack then
-		return
+		return -- Same animation, just sync
 	end
 
 	stopCurrentTrack()
 
-	-- Create and play the new animation
 	local newAnim = Instance.new("Animation")
 	newAnim.AnimationId = animationId
 
@@ -1106,59 +1105,50 @@ end
 local function syncAnimationState(targetTrack)
 	if not currentTrack or not targetTrack then return end
 
-	-- Sync TimePosition (animation progress)
-	if math.abs(currentTrack.TimePosition - targetTrack.TimePosition) > 0.05 then
-		currentTrack.TimePosition = targetTrack.TimePosition
-	end
+	-- Safely sync properties
+	pcall(function()
+		if math.abs(currentTrack.TimePosition - targetTrack.TimePosition) > 0.05 then
+			currentTrack.TimePosition = targetTrack.TimePosition
+		end
+	end)
 
-	-- Sync speed
-	if currentTrack.Speed ~= targetTrack.Speed then
-		currentTrack:AdjustSpeed(targetTrack.Speed)
-	end
+	pcall(function()
+		if currentTrack.Speed ~= targetTrack.Speed then
+			currentTrack:AdjustSpeed(targetTrack.Speed)
+		end
+	end)
 
-	-- Sync weight (blending)
-	if currentTrack.Weight ~= targetTrack.Weight then
-		currentTrack:AdjustWeight(targetTrack.Weight, 0.1)
-	end
+	pcall(function()
+		if typeof(targetTrack.Weight) == "number" and typeof(currentTrack.Weight) == "number" then
+			if math.abs(currentTrack.Weight - targetTrack.Weight) > 0.1 then
+				currentTrack:AdjustWeight(targetTrack.Weight, 0.1)
+			end
+		end
+	end)
 end
 
 local function startSync()
+	if heartbeatConnection then heartbeatConnection:Disconnect() end
+
 	heartbeatConnection = RunService.Heartbeat:Connect(function()
+		if not isToggled then return end
+
 		local targetChar = targetPlayer
 		local localChar = localPlayer.Character
 
-		if not targetChar then
-			warn("Target character not found.")
-			return
-		end
-
-		if not localChar then
-			warn("Local character not found.")
-			return
-		end
+		if not targetChar or not localChar then return end
 
 		local targetHumanoid = targetChar:FindFirstChildWhichIsA("Humanoid")
 		local localHumanoid = localChar:FindFirstChildWhichIsA("Humanoid")
 
-		if not targetHumanoid then
-			warn("Target humanoid not found.")
-			return
-		end
-
-		if not localHumanoid then
-			warn("Local humanoid not found.")
-			return
-		end
+		if not targetHumanoid or not localHumanoid then return end
 
 		local targetTrack = getPlayingTrack(targetHumanoid)
-
 		if targetTrack then
 			local animId = targetTrack.Animation and targetTrack.Animation.AnimationId
 			if animId then
 				copyAnimation(animId, localHumanoid)
 				syncAnimationState(targetTrack)
-			else
-				warn("Target animation ID not found.")
 			end
 		end
 	end)
@@ -1171,6 +1161,22 @@ local function stopSync()
 	end
 	stopCurrentTrack()
 	lastAnimationId = nil
+end
+
+-- Toggle logic
+button.MouseButton1Click:Connect(function()
+	isToggled = not isToggled
+
+	if isToggled then
+		print("Animation sync enabled.")
+		startSync()
+	else
+		print("Animation sync disabled.")
+		stopSync()
+	end
+end)
+
+	end)
 end
 
 -- Toggle logic
