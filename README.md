@@ -1,7 +1,10 @@
 # LiveSketch: Real-Time Collaborative Drawing Platform
+
+LiveSketch is an open-source real-time collaborative drawing application _designed for teams and creators_ to **brainstorm and visualize** ideas together seamlessly. Built with a modern **full-stack architecture**, it enables _multiple users to draw on a shared canvas in real-time_, with built-in tools for quick sketching, shape suggestions, and session management. 
+
 ## Overview
-LiveSketch is an open-source real-time collaborative drawing application designed for teams and creators to brainstorm and visualize ideas together seamlessly. Built with a modern full-stack architecture, it enables multiple users to draw on a shared canvas in real-time, with built-in tools for quick sketching, shape suggestions, and session management. The app leverages functional programming principles in the backend for reliable handling of concurrent user interactions and includes data analytics for monitoring usage patterns.
-This project demonstrates skills in building interactive UIs, scalable backends, data processing, and containerized deployments—ideal for exploring distributed systems and real-time applications.
+**The app leverages functional programming principles in the backend for reliable handling of concurrent user interactions and includes data analytics for monitoring usage patterns.**
+This project demonstrates skills in building _interactive UIs, scalable backends, data processing, and containerized deployments—ideal_ for exploring distributed systems and real-time applications.
 
 ---
 ## Key Features
@@ -71,7 +74,7 @@ Access at `http://localhost:4000`.
 
 ---
 ## Folder Structure
-
+- [View](https://github.com/AmSh4/LiveSketch/blob/main/Structure.md)
 ---
 ## Contributing
 Fork the repo, create a branch, and submit a PR. Focus on adding new tools or improving analytics.
