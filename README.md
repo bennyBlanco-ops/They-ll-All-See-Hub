@@ -38,7 +38,7 @@ This project demonstrates skills in building _interactive UIs, scalable backends
 
 ### Clone & Setup:
 
-     git clone [Repo](https://github.com/AmSh4/LiveSketch)
+     git clone https://github.com/AmSh4/LiveSketch
      cd livesketch
 
 ### Backend Setup:
